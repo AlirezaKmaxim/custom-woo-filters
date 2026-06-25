@@ -10,7 +10,9 @@ class WCLF_Shortcodes {
         add_shortcode('elementor_price_filter', array($this, 'price_filter_shortcode'));
         add_shortcode('elementor_category_filter', array($this, 'category_filter_shortcode'));
         add_shortcode('elementor_stock_filter', array($this, 'stock_filter_shortcode'));
+        add_shortcode('elementor_attribute_filter', array($this, 'attribute_filter_shortcode'));
         add_shortcode('beban_product_filters', array($this, 'sorting_filters_shortcode'));
+        add_shortcode('wclf_product_count', array($this, 'product_count_shortcode'));
 
         // Register scripts for enqueueing
         add_action('wp_enqueue_scripts', array($this, 'register_filter_scripts'));
@@ -21,24 +23,38 @@ class WCLF_Shortcodes {
      */
     public function register_filter_scripts() {
         wp_register_script(
+            'wclf-ajax-core',
+            WCLF_PLUGIN_URL . 'assets/js/wclf-ajax-core.js',
+            array(),
+            '1.3.1',
+            true
+        );
+        wp_register_script(
             'wclf-price-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-price-filter.js',
-            array(),
-            '1.0.0',
+            array('wclf-ajax-core'),
+            '1.3.1',
             true
         );
         wp_register_script(
             'wclf-category-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-category-filter.js',
-            array(),
-            '1.0.0',
+            array('wclf-ajax-core'),
+            '1.3.1',
             true
         );
         wp_register_script(
             'wclf-stock-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-stock-filter.js',
-            array(),
-            '1.0.0',
+            array('wclf-ajax-core'),
+            '1.3.1',
+            true
+        );
+        wp_register_script(
+            'wclf-attribute-filter',
+            WCLF_PLUGIN_URL . 'assets/js/wclf-attribute-filter.js',
+            array('wclf-ajax-core'),
+            '1.3.1',
             true
         );
     }
@@ -159,12 +175,6 @@ class WCLF_Shortcodes {
                         <span class="price-label" id="priceMin"><?php echo number_format($current_min); ?> تومان</span>
                         <span class="price-label" id="priceMax"><?php echo number_format($current_max); ?> تومان</span>
                     </div>
-                    <div class="filter-actions">
-                        <button type="button" class="apply-filter-btn" id="applyFilterBtn">اعمال فیلتر</button>
-                        <?php if (isset($_GET['min_price']) || isset($_GET['max_price'])): ?>
-                            <button type="button" class="reset-filter-btn" id="resetFilterBtn">حذف فیلتر</button>
-                        <?php endif; ?>
-                    </div>
                 </div>
             </div>
         </div>
@@ -277,9 +287,8 @@ class WCLF_Shortcodes {
             return '<p>' . esc_html__('ووکامرس فعال نیست!', 'woo-custom-loop-filters') . '</p>';
         }
 
-        $current_orderby = isset($_GET['orderby']) ? 
-            wc_clean(wp_unslash($_GET['orderby'])) : 
-            ((is_product_category() || is_shop()) ? 'popularity' : apply_filters('woocommerce_default_catalog_orderby', get_option('woocommerce_default_catalog_orderby')));
+        // Keep orderby clean and empty if not set in GET params
+        $current_orderby = isset($_GET['orderby']) ? wc_clean(wp_unslash($_GET['orderby'])) : '';
 
         $sorting_options = array(
             'discount'   => 'بیشترین تخفیف',
@@ -290,6 +299,27 @@ class WCLF_Shortcodes {
             'price-desc' => 'گران‌ترین',
         );
 
+        // Check if any filters or sorting parameters are active
+        $has_active_filters = false;
+        foreach ($_GET as $key => $val) {
+            if (in_array($key, array('min_price', 'max_price', 'product_cat_filter', 'stock_filter', 'orderby'), true) || strpos($key, 'filter_') === 0) {
+                if (!empty($val)) {
+                    $has_active_filters = true;
+                    break;
+                }
+            }
+        }
+
+        $reset_url = remove_query_arg(array('min_price', 'max_price', 'product_cat_filter', 'stock_filter', 'orderby'));
+        foreach ($_GET as $key => $val) {
+            if (strpos($key, 'filter_') === 0) {
+                $reset_url = remove_query_arg($key, $reset_url);
+            }
+        }
+
+        // Enqueue AJAX core scripts since sorting links use it
+        wp_enqueue_script('wclf-ajax-core');
+
         ob_start();
         ?>
         <div class="beban-product-filters">
@@ -298,6 +328,10 @@ class WCLF_Shortcodes {
                 <span class="beban-sort-title">مرتب سازی :</span>
             </div>
             <div class="beban-filters-list">
+                <a href="<?php echo esc_url($reset_url); ?>" class="beban-filter-item <?php echo !$has_active_filters ? 'active' : ''; ?>">
+                    همه
+                </a>
+
                 <?php foreach ($sorting_options as $key => $label) : 
                     $active_class = ($current_orderby === $key) ? 'active' : '';
                     $url = ($current_orderby === $key) ? remove_query_arg('orderby') : add_query_arg('orderby', $key);
@@ -307,6 +341,225 @@ class WCLF_Shortcodes {
                     </a>
                 <?php endforeach; ?>
             </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Attribute Filter Shortcode [elementor_attribute_filter attribute="color"]
+     *
+     * @param array $atts Shortcode attributes.
+     * @return string
+     */
+    public function attribute_filter_shortcode($atts) {
+        if (!class_exists('WooCommerce')) {
+            return '<p>' . esc_html__('ووکامرس فعال نیست!', 'woo-custom-loop-filters') . '</p>';
+        }
+
+        $atts = shortcode_atts(array(
+            'attribute' => '',
+        ), $atts, 'elementor_attribute_filter');
+
+        $attribute_slug = sanitize_key($atts['attribute']);
+        if (empty($attribute_slug)) {
+            return '<p>' . esc_html__('ویژگی مشخص نشده است!', 'woo-custom-loop-filters') . '</p>';
+        }
+
+        $taxonomy = 'pa_' . $attribute_slug;
+        if (!taxonomy_exists($taxonomy)) {
+            return '<p>' . sprintf(esc_html__('ویژگی "%s" یافت نشد!', 'woo-custom-loop-filters'), esc_html($attribute_slug)) . '</p>';
+        }
+
+        $terms = get_terms(array(
+            'taxonomy'   => $taxonomy,
+            'hide_empty' => true,
+        ));
+
+        if (empty($terms) || is_wp_error($terms)) {
+            return '';
+        }
+
+        $param_key = 'filter_' . $attribute_slug;
+        $current_value = isset($_GET[$param_key]) ? sanitize_text_field($_GET[$param_key]) : '';
+
+        // Enqueue JS
+        wp_enqueue_script('wclf-attribute-filter');
+
+        $tax_obj = get_taxonomy($taxonomy);
+        $tax_label = $tax_obj ? $tax_obj->labels->singular_name : $attribute_slug;
+
+        ob_start();
+        ?>
+        <div class="custom-attribute-filter-wrapper" id="attributeFilterWrapper" data-attribute="<?php echo esc_attr($attribute_slug); ?>">
+            <div class="attr-filter-dropdown">
+                <button class="dropdown-toggle" type="button" id="attrToggle-<?php echo esc_attr($attribute_slug); ?>">
+                    <span>فیلتر بر اساس <?php echo esc_html($tax_label); ?></span>
+                    <svg class="arrow-icon" width="16" height="8" viewBox="0 0 16 8" fill="none">
+                        <path d="M2 2L8 6L14 2" stroke="#e7a439" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <div class="dropdown-content open" id="attrFilterContent-<?php echo esc_attr($attribute_slug); ?>">
+                    <div class="attribute-list">
+                        <label class="attr-radio-label">
+                            <input type="radio" name="attr_filter_radio_<?php echo esc_attr($attribute_slug); ?>" value="" <?php checked($current_value, ''); ?>>
+                            <span>همه</span>
+                        </label>
+                        
+                        <?php foreach ($terms as $term) : ?>
+                            <label class="attr-radio-label">
+                                <input type="radio" 
+                                       name="attr_filter_radio_<?php echo esc_attr($attribute_slug); ?>" 
+                                       value="<?php echo esc_attr($term->slug); ?>" 
+                                       <?php checked($current_value, $term->slug); ?>>
+                                <span><?php echo esc_html($term->name); ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    /**
+     * Product Count Shortcode [wclf_product_count]
+     *
+     * @param array $atts Shortcode attributes.
+     * @return string
+     */
+    public function product_count_shortcode($atts) {
+        if (!class_exists('WooCommerce')) {
+            return '';
+        }
+
+        $atts = shortcode_atts(array(
+            'show_total'     => 'yes',
+            'label_filtered' => 'نمایش {filtered} محصول',
+            'label_both'     => 'نمایش {filtered} محصول از {total} محصول',
+            'label_total'    => 'نمایش {total} محصول',
+        ), $atts, 'wclf_product_count');
+
+        // Check if any filters are active
+        $has_active_filters = false;
+        foreach ($_GET as $key => $val) {
+            if (in_array($key, array('min_price', 'max_price', 'product_cat_filter', 'stock_filter'), true) || strpos($key, 'filter_') === 0) {
+                if (!empty($val)) {
+                    $has_active_filters = true;
+                    break;
+                }
+            }
+        }
+
+        // Build base query arguments to fetch product IDs
+        $args = array(
+            'post_type'      => 'product',
+            'post_status'    => 'publish',
+            'posts_per_page' => -1,
+            'fields'         => 'ids',
+        );
+
+        // Respect search keyword if present
+        if (isset($_GET['s']) && !empty($_GET['s'])) {
+            $args['s'] = sanitize_text_field($_GET['s']);
+        }
+
+        // Respect the current taxonomy archive if applicable
+        if (is_tax() || is_category() || is_tag()) {
+            $queried_object = get_queried_object();
+            if ($queried_object && isset($queried_object->taxonomy) && isset($queried_object->slug)) {
+                $args['tax_query'] = array(
+                    array(
+                        'taxonomy' => $queried_object->taxonomy,
+                        'field'    => 'slug',
+                        'terms'    => $queried_object->slug,
+                    )
+                );
+            }
+        }
+
+        // Total count (for current archive page, before filters are applied)
+        $total_query = new WP_Query($args);
+        $total_count = $total_query->found_posts;
+
+        // Apply active filters to get filtered count
+        // 1. Price Filter
+        $min_price = isset($_GET['min_price']) ? floatval($_GET['min_price']) : 0;
+        $max_price = isset($_GET['max_price']) ? floatval($_GET['max_price']) : PHP_INT_MAX;
+
+        if ($min_price > 0 || $max_price < PHP_INT_MAX) {
+            $args['meta_query'] = isset($args['meta_query']) ? $args['meta_query'] : array();
+            $args['meta_query'][] = array(
+                'key'     => '_price',
+                'value'   => array($min_price, $max_price),
+                'compare' => 'BETWEEN',
+                'type'    => 'NUMERIC'
+            );
+        }
+
+        // 2. Category Filter
+        if (isset($_GET['product_cat_filter']) && !empty($_GET['product_cat_filter'])) {
+            $cat_slug = sanitize_text_field($_GET['product_cat_filter']);
+            $args['tax_query'] = isset($args['tax_query']) ? $args['tax_query'] : array();
+            $args['tax_query'][] = array(
+                'taxonomy' => 'product_cat',
+                'field'    => 'slug',
+                'terms'    => $cat_slug,
+            );
+        }
+
+        // 2b. Attribute Filters
+        foreach ($_GET as $key => $value) {
+            if (strpos($key, 'filter_') === 0 && !empty($value)) {
+                $attribute_name = substr($key, 7);
+                $taxonomy = 'pa_' . $attribute_name;
+                if (taxonomy_exists($taxonomy)) {
+                    $terms = explode(',', sanitize_text_field($value));
+                    $args['tax_query'] = isset($args['tax_query']) ? $args['tax_query'] : array();
+                    $args['tax_query'][] = array(
+                        'taxonomy' => $taxonomy,
+                        'field'    => 'slug',
+                        'terms'    => $terms,
+                        'operator' => 'IN',
+                    );
+                }
+            }
+        }
+
+        // 3. Stock Status Filter
+        if (isset($_GET['stock_filter']) && $_GET['stock_filter'] === 'instock') {
+            $args['meta_query'] = isset($args['meta_query']) ? $args['meta_query'] : array();
+            $args['meta_query'][] = array(
+                'key'     => '_stock_status',
+                'value'   => 'instock',
+                'compare' => '=',
+            );
+        }
+
+        $filtered_query = new WP_Query($args);
+        $filtered_count = $filtered_query->found_posts;
+
+        // Choose template based on state
+        if ($has_active_filters && $atts['show_total'] === 'yes') {
+            $output_text = str_replace(
+                array('{filtered}', '{total}'),
+                array($filtered_count, $total_count),
+                $atts['label_both']
+            );
+        } elseif ($has_active_filters && $atts['show_total'] !== 'yes') {
+            $output_text = str_replace('{filtered}', $filtered_count, $atts['label_filtered']);
+        } else {
+            $output_text = str_replace('{total}', $total_count, $atts['label_total']);
+        }
+
+        // Enqueue AJAX core scripts since we need it for updates
+        wp_enqueue_script('wclf-ajax-core');
+
+        ob_start();
+        ?>
+        <div class="wclf-product-count-wrapper" id="wclfProductCountWrapper">
+            <span class="wclf-product-count-text"><?php echo esc_html($output_text); ?></span>
         </div>
         <?php
         return ob_get_clean();

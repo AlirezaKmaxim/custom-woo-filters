@@ -1,7 +1,7 @@
 (function() {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', function() {
+    window.wclf_init_price_filter = function() {
         const wrapper = document.getElementById('priceFilterWrapper');
         if (!wrapper) return;
 
@@ -12,7 +12,7 @@
         const priceMinLabel = document.getElementById('priceMin');
         const priceMaxLabel = document.getElementById('priceMax');
         const rangeFill = document.getElementById('rangeFill');
-        const applyBtn = document.getElementById('applyFilterBtn');
+        const resetBtn = document.getElementById('resetFilterBtn');
 
         if (!sliderMin || !sliderMax || !priceMinLabel || !priceMaxLabel || !rangeFill) return;
 
@@ -65,33 +65,40 @@
                 url.searchParams.delete('max_price');
             }
 
-            window.location.href = url.toString();
+            window.wclf_apply_filters(url.toString());
         }
 
         if (toggleBtn && content) {
-            toggleBtn.addEventListener('click', function() {
+            const newToggle = toggleBtn.cloneNode(true);
+            toggleBtn.parentNode.replaceChild(newToggle, toggleBtn);
+            newToggle.addEventListener('click', function() {
                 content.classList.toggle('open');
-                toggleBtn.classList.toggle('active');
+                newToggle.classList.toggle('active');
             });
         }
 
         sliderMin.addEventListener('input', updateSlider);
         sliderMax.addEventListener('input', updateSlider);
-        
-        if (applyBtn) {
-            applyBtn.addEventListener('click', applyFilter);
-        }
 
-        const resetBtn = document.getElementById('resetFilterBtn');
+        // Apply automatically on drag release
+        sliderMin.addEventListener('change', applyFilter);
+        sliderMax.addEventListener('change', applyFilter);
+
         if (resetBtn) {
             resetBtn.addEventListener('click', function() {
                 const url = new URL(window.location.href);
                 url.searchParams.delete('min_price');
                 url.searchParams.delete('max_price');
-                window.location.href = url.toString();
+                window.wclf_apply_filters(url.toString());
             });
         }
 
         updateSlider();
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.wclf_init_price_filter);
+    } else {
+        window.wclf_init_price_filter();
+    }
 })();

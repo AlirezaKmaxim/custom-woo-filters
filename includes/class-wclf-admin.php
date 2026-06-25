@@ -30,77 +30,283 @@ class WCLF_Admin {
      */
     public function render_admin_page() {
         ?>
-        <div class="wrap wclf-admin-wrap" style="direction: rtl; text-align: right; max-width: 800px; margin-top: 20px;">
+        <style>
+            .wclf-admin-wrap {
+                direction: rtl;
+                text-align: right;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+                margin-top: 25px;
+                padding-left: 20px;
+                padding-right: 5px;
+                box-sizing: border-box;
+            }
+            .wclf-admin-wrap h1 {
+                font-size: 24px;
+                font-weight: 700;
+                color: #23282d;
+                margin-bottom: 20px;
+            }
+            .wclf-admin-wrap .card {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin-top: 25px;
+                padding: 30px;
+                background: #fff;
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+                border: 1px solid #e2e8f0 !important;
+                box-sizing: border-box;
+            }
+            .wclf-admin-wrap .card-warning {
+                border-right: 5px solid #ffb900 !important;
+            }
+            .wclf-admin-wrap .card-info {
+                border-right: 5px solid #2271b1 !important;
+            }
+            .wclf-admin-wrap h2 {
+                margin-top: 0;
+                font-size: 18px;
+                font-weight: 600;
+                color: #1e1e1e;
+                border-bottom: 1px solid #f0f0f1;
+                padding-bottom: 15px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .wclf-admin-wrap h2 span.dashicons {
+                font-size: 22px;
+                width: 22px;
+                height: 22px;
+                color: #2271b1;
+            }
+            .wclf-admin-wrap h2.warning-title span.dashicons {
+                color: #d54e21;
+            }
+            .wclf-admin-wrap p {
+                font-size: 14px;
+                line-height: 1.8;
+                color: #50575e;
+            }
+            .wclf-admin-wrap ol, .wclf-admin-wrap ul {
+                padding-right: 20px;
+                margin: 15px 0;
+            }
+            .wclf-admin-wrap ol li, .wclf-admin-wrap ul li {
+                font-size: 14px;
+                line-height: 1.8;
+                color: #50575e;
+                margin-bottom: 12px;
+            }
+            .wclf-admin-wrap ol li strong, .wclf-admin-wrap ul li strong {
+                color: #1e1e1e;
+            }
+            .wclf-query-id-box {
+                background: #f0f6fc;
+                border: 1px dashed #2271b1;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-family: Consolas, Monaco, monospace;
+                font-size: 16px;
+                font-weight: bold;
+                display: inline-block;
+                direction: ltr;
+                margin: 15px 0;
+                color: #2271b1;
+            }
+            .wclf-admin-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+            .wclf-admin-table th {
+                background-color: #f8fafc;
+                font-weight: 600;
+                color: #1e1e1e;
+                text-align: right;
+                padding: 15px;
+                font-size: 14px;
+                border-bottom: 2px solid #e2e8f0;
+            }
+            .wclf-admin-table td {
+                padding: 18px 15px;
+                border-bottom: 1px solid #f0f0f1;
+                vertical-align: middle;
+                font-size: 14px;
+                color: #50575e;
+                line-height: 1.8;
+            }
+            .wclf-admin-table tr:hover td {
+                background-color: #f8fafc;
+            }
+            .wclf-code-badge {
+                font-size: 13px;
+                background: #f1f5f9;
+                padding: 6px 12px;
+                border-radius: 6px;
+                direction: ltr;
+                display: inline-block;
+                font-family: Consolas, Monaco, monospace;
+                border: 1px solid #e2e8f0;
+                color: #0f172a;
+                white-space: nowrap;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            }
+            .wclf-code-param {
+                font-size: 12px;
+                background: #fef08a;
+                padding: 2px 6px;
+                border-radius: 4px;
+                direction: ltr;
+                display: inline-block;
+                font-family: Consolas, Monaco, monospace;
+                border: 1px solid #fde047;
+                color: #854d0e;
+            }
+            .wclf-param-list {
+                margin-top: 8px;
+                padding-right: 15px;
+                list-style-type: circle;
+            }
+            .wclf-param-list li {
+                margin-bottom: 5px !important;
+                font-size: 13px !important;
+            }
+        </style>
+        <div class="wrap wclf-admin-wrap">
             <h1><?php esc_html_e('تنظیمات فیلترهای سفارشی المنتور و ووکامرس', 'woo-custom-loop-filters'); ?></h1>
             <hr class="wp-header-end">
             
-            <div class="card" style="margin-top: 20px; padding: 20px; border-right: 4px solid #ffb900; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h2 style="color: #d54e21; margin-top: 0; font-size: 1.3em;">
-                    <span class="dashicons dashicons-warning" style="vertical-align: middle; margin-left: 5px;"></span>
+            <!-- اتصال به المنتور -->
+            <div class="card card-warning">
+                <h2 class="warning-title" style="color: #d54e21;">
+                    <span class="dashicons dashicons-warning"></span>
                     <?php esc_html_e('اقدام بسیار مهم برای اتصال به المنتور (Query ID)', 'woo-custom-loop-filters'); ?>
                 </h2>
-                <p style="font-size: 14px; line-height: 1.8;">
-                    <?php esc_html_e('برای اینکه فیلترها و مرتب‌سازی روی ویجت‌های المنتور (مانند Loop Grid یا Product Grid) تاثیر بگذارند، باید مراحل زیر را انجام دهید:', 'woo-custom-loop-filters'); ?>
+                <p>
+                    <?php esc_html_e('یکی از کلیدی‌ترین ویژگی‌های این افزونه، قابلیت اعمال فیلترها و مرتب‌سازی به صورت ایجکس بر روی ویجت‌های نمایش محصولات المنتور (مانند Loop Grid و Product Grid) است. برای فعال‌سازی این اتصال، مراحل زیر را در ویرایشگر المنتور دنبال کنید:', 'woo-custom-loop-filters'); ?>
                 </p>
-                <ol style="font-size: 14px; line-height: 1.8; padding-right: 20px;">
-                    <li><?php esc_html_e('ویجت Loop Grid یا هر ویجت نمایش محصولات المنتور را در صفحه ویرایشگر المنتور انتخاب کنید.', 'woo-custom-loop-filters'); ?></li>
-                    <li><?php esc_html_e('در منوی تنظیمات ویجت، به تب Content و بخش Query بروید.', 'woo-custom-loop-filters'); ?></li>
-                    <li><?php esc_html_e('فیلد Query ID را پیدا کرده و دقیقاً عبارت زیر را در آن بنویسید:', 'woo-custom-loop-filters'); ?></li>
+                <ol>
+                    <li><?php esc_html_e('ویجت Loop Grid یا هر ویجت محصولات المنتور را در صفحه انتخاب کنید.', 'woo-custom-loop-filters'); ?></li>
+                    <li><?php esc_html_e('در منوی تنظیمات ویجت (سمت راست)، به تب Content (محتوا) و سپس بخش Query (کوئری) بروید.', 'woo-custom-loop-filters'); ?></li>
+                    <li><?php esc_html_e('فیلد شناسه کوئری (Query ID) را پیدا کرده و دقیقاً مقدار زیر را وارد کنید:', 'woo-custom-loop-filters'); ?></li>
                 </ol>
-                <div style="background: #f0f0f1; padding: 10px 15px; border-radius: 4px; font-family: monospace; font-size: 16px; font-weight: bold; display: inline-block; direction: ltr; margin: 10px 0;">
+                <div class="wclf-query-id-box">
                     custom_loop_filters
                 </div>
-                <p style="font-size: 13px; color: #666; margin-bottom: 0;">
-                    <?php esc_html_e('* توجه: در صورتی که این مقدار را وارد نکنید، فیلترهای صفحه روی کوئری المنتور تاثیری نخواهند داشت.', 'woo-custom-loop-filters'); ?>
+                <p style="font-size: 13px; color: #d54e21; font-weight: bold; margin-bottom: 0;">
+                    <?php esc_html_e('* توجه: در صورتی که این مقدار را وارد نکنید، فیلترهای صفحه روی محصولات کوئری المنتور هیچ تاثیری نخواهند داشت.', 'woo-custom-loop-filters'); ?>
                 </p>
             </div>
 
-            <div class="card" style="margin-top: 20px; padding: 20px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h2 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    <span class="dashicons dashicons-shortcode" style="vertical-align: middle; margin-left: 5px;"></span>
-                    <?php esc_html_e('لیست شورت‌کدهای موجود', 'woo-custom-loop-filters'); ?>
+            <!-- لیست شورت‌کدها -->
+            <div class="card">
+                <h2>
+                    <span class="dashicons dashicons-shortcode"></span>
+                    <?php esc_html_e('لیست شورت‌کدهای فیلتر و شمارشگر محصولات', 'woo-custom-loop-filters'); ?>
                 </h2>
-                <p style="font-size: 14px; line-height: 1.8;">
-                    <?php esc_html_e('شما می‌توانید از شورت‌کدهای زیر در هر بخش از صفحات المنتور یا سایدبارها استفاده کنید تا فیلترها نمایش داده شوند:', 'woo-custom-loop-filters'); ?>
+                <p>
+                    <?php esc_html_e('از شورت‌کدهای زیر می‌توانید در هر کجای صفحات المنتور، برگه‌ها یا سایدبارها استفاده کنید. تمامی این فیلترها به صورت کاملاً پویا و ایجکس (بدون لود مجدد صفحه) با یکدیگر همگام شده و کار می‌کنند:', 'woo-custom-loop-filters'); ?>
                 </p>
                 
-                <table class="wp-list-table widefat fixed striped" style="margin-top: 15px;">
+                <table class="wclf-admin-table">
                     <thead>
                         <tr>
-                            <th style="width: 30%; font-weight: bold; text-align: right;"><?php esc_html_e('شورت‌کد', 'woo-custom-loop-filters'); ?></th>
-                            <th style="width: 70%; font-weight: bold; text-align: right;"><?php esc_html_e('توضیحات و عملکرد', 'woo-custom-loop-filters'); ?></th>
+                            <th style="width: 30%;"><?php esc_html_e('شورت‌کد', 'woo-custom-loop-filters'); ?></th>
+                            <th style="width: 70%;"><?php esc_html_e('توضیحات و نمونه کارکرد', 'woo-custom-loop-filters'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- قیمت -->
                         <tr>
-                            <td><code style="font-size: 14px; background: #f0f0f1; padding: 3px 6px; border-radius: 3px; direction: ltr; display: inline-block;">[elementor_price_filter]</code></td>
-                            <td style="line-height: 1.6;"><?php esc_html_e('فیلتر بازه قیمتی محصولات. این شورت‌کد کمترین و بیشترین قیمت موجود در دیتابیس را به عنوان محدوده انتخاب می‌کند و امکان فیلتر قیمت را به کاربر می‌دهد.', 'woo-custom-loop-filters'); ?></td>
+                            <td>
+                                <code class="wclf-code-badge">[elementor_price_filter]</code>
+                            </td>
+                            <td>
+                                <strong><?php esc_html_e('فیلتر بازه قیمتی محصولات:', 'woo-custom-loop-filters'); ?></strong>
+                                <?php esc_html_e('اسلایدر دوطرفه قیمت که کمترین و بیشترین قیمت موجود در دیتابیس محصولات را به عنوان محدوده انتخاب می‌کند و امکان فیلتر قیمت را به کاربر می‌دهد.', 'woo-custom-loop-filters'); ?>
+                            </td>
                         </tr>
+                        <!-- دسته‌بندی -->
                         <tr>
-                            <td><code style="font-size: 14px; background: #f0f0f1; padding: 3px 6px; border-radius: 3px; direction: ltr; display: inline-block;">[elementor_category_filter]</code></td>
-                            <td style="line-height: 1.6;"><?php esc_html_e('فیلتر دسته‌بندی محصولات به صورت دکمه‌های رادیویی. فقط دسته‌هایی که دارای محصول هستند را نمایش می‌دهد.', 'woo-custom-loop-filters'); ?></td>
+                            <td>
+                                <code class="wclf-code-badge">[elementor_category_filter]</code>
+                            </td>
+                            <td>
+                                <strong><?php esc_html_e('فیلتر دسته‌بندی محصولات:', 'woo-custom-loop-filters'); ?></strong>
+                                <?php esc_html_e('نمایش دسته‌بندی‌ها به صورت دکمه‌های رادیویی هوشمند. فقط دسته‌هایی که دارای محصول هستند در این بخش لیست می‌شوند.', 'woo-custom-loop-filters'); ?>
+                            </td>
                         </tr>
+                        <!-- موجودی -->
                         <tr>
-                            <td><code style="font-size: 14px; background: #f0f0f1; padding: 3px 6px; border-radius: 3px; direction: ltr; display: inline-block;">[elementor_stock_filter]</code></td>
-                            <td style="line-height: 1.6;"><?php esc_html_e('فیلتر موجودی محصولات. یک سوئیچ تغییر وضعیت (Toggle Switch) که با روشن کردن آن فقط محصولات موجود در انبار نمایش داده می‌شوند.', 'woo-custom-loop-filters'); ?></td>
+                            <td>
+                                <code class="wclf-code-badge">[elementor_stock_filter]</code>
+                            </td>
+                            <td>
+                                <strong><?php esc_html_e('فیلتر وضعیت موجودی محصولات:', 'woo-custom-loop-filters'); ?></strong>
+                                <?php esc_html_e('یک سوئیچ تغییر وضعیت (Toggle Switch) شکیل که با روشن کردن آن، فقط محصولات موجود در انبار به کاربر نمایش داده می‌شوند.', 'woo-custom-loop-filters'); ?>
+                            </td>
                         </tr>
+                        <!-- ویژگی‌ها -->
                         <tr>
-                            <td><code style="font-size: 14px; background: #f0f0f1; padding: 3px 6px; border-radius: 3px; direction: ltr; display: inline-block;">[beban_product_filters]</code></td>
-                            <td style="line-height: 1.6;"><?php esc_html_e('بخش مرتب‌سازی پیشرفته محصولات. گزینه‌هایی شامل: بیشترین تخفیف، پربازدیدترین، جدیدترین، پرفروش‌ترین، ارزان‌ترین و گران‌ترین.', 'woo-custom-loop-filters'); ?></td>
+                            <td>
+                                <code class="wclf-code-badge">[elementor_attribute_filter attribute="color"]</code>
+                            </td>
+                            <td>
+                                <strong><?php esc_html_e('فیلتر ویژگی‌های محصولات (Attributes):', 'woo-custom-loop-filters'); ?></strong>
+                                <?php esc_html_e('فیلتر ویژگی‌های محصولات (مانند رنگ، سایز، برند و غیره). مقدار پارامتر ', 'woo-custom-loop-filters'); ?>
+                                <code class="wclf-code-param">attribute</code>
+                                <?php esc_html_e(' را برابر با نامک ویژگی ووکامرس قرار دهید. مثال برای سایز: ', 'woo-custom-loop-filters'); ?>
+                                <code class="wclf-code-badge">[elementor_attribute_filter attribute="size"]</code>
+                            </td>
+                        </tr>
+                        <!-- مرتب‌سازی -->
+                        <tr>
+                            <td>
+                                <code class="wclf-code-badge">[beban_product_filters]</code>
+                            </td>
+                            <td>
+                                <strong><?php esc_html_e('مرتب‌سازی پیشرفته محصولات:', 'woo-custom-loop-filters'); ?></strong>
+                                <?php esc_html_e('گزینه‌های مرتب‌سازی پیشرفته و سریع شامل: بیشترین تخفیف، پربازدیدترین، جدیدترین، پرفروش‌ترین، ارزان‌ترین و گران‌ترین.', 'woo-custom-loop-filters'); ?>
+                            </td>
+                        </tr>
+                        <!-- شمارنده محصولات جدید -->
+                        <tr>
+                            <td>
+                                <code class="wclf-code-badge">[wclf_product_count]</code>
+                            </td>
+                            <td>
+                                <strong><?php esc_html_e('شمارنده پویای تعداد محصولات (جدید):', 'woo-custom-loop-filters'); ?></strong>
+                                <?php esc_html_e('این شورت‌کد تعداد کل محصولات و تعداد فیلتر شده را نشان می‌دهد و به محض اعمال هر فیلتری، مقدار عددی آن به صورت کاملاً زنده (Dynamic) تغییر می‌کند.', 'woo-custom-loop-filters'); ?>
+                                <br>
+                                <strong><?php esc_html_e('پارامترهای اختیاری جهت شخصی‌سازی متون:', 'woo-custom-loop-filters'); ?></strong>
+                                <ul class="wclf-param-list">
+                                    <li><code class="wclf-code-param">show_total</code>: <?php esc_html_e('نمایش تعداد کل در کنار فیلتر شده (yes یا no - پیش‌فرض: yes).', 'woo-custom-loop-filters'); ?></li>
+                                    <li><code class="wclf-code-param">label_both</code>: <?php esc_html_e('قالب متنی نمایش همزمان. پیش‌فرض: "نمایش {filtered} محصول از {total} محصول".', 'woo-custom-loop-filters'); ?></li>
+                                    <li><code class="wclf-code-param">label_filtered</code>: <?php esc_html_e('قالب متنی نمایش بدون تعداد کل. پیش‌فرض: "نمایش {filtered} محصول".', 'woo-custom-loop-filters'); ?></li>
+                                    <li><code class="wclf-code-param">label_total</code>: <?php esc_html_e('قالب متنی زمانی که هیچ فیلتری اعمال نشده است. پیش‌فرض: "نمایش {total} محصول".', 'woo-custom-loop-filters'); ?></li>
+                                </ul>
+                                <strong><?php esc_html_e('مثال برای استفاده ساده:', 'woo-custom-loop-filters'); ?></strong>
+                                <code class="wclf-code-badge">[wclf_product_count]</code>
+                                <br>
+                                <strong><?php esc_html_e('مثال برای عدم نمایش تعداد کل (فقط تعداد فیلتر شده):', 'woo-custom-loop-filters'); ?></strong>
+                                <code class="wclf-code-badge">[wclf_product_count show_total="no" label_filtered="تعداد: {filtered} کالا"]</code>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <div class="card" style="margin-top: 20px; padding: 20px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <h2 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    <span class="dashicons dashicons-info" style="vertical-align: middle; margin-left: 5px;"></span>
+            <!-- نکات فنی -->
+            <div class="card card-info">
+                <h2>
+                    <span class="dashicons dashicons-info"></span>
                     <?php esc_html_e('نکات فنی و توسعه', 'woo-custom-loop-filters'); ?>
                 </h2>
-                <ul style="font-size: 14px; line-height: 1.8; list-style-type: disc; padding-right: 20px;">
-                    <li><strong><?php esc_html_e('سازگاری با آرشیو پیش‌فرض ووکامرس:', 'woo-custom-loop-filters'); ?></strong> <?php esc_html_e('این پلاگین به صورت کاملاً خودکار فیلترها را روی صفحات پیش‌فرض آرشیو محصولات ووکامرس (مانند صفحه فروشگاه و آرشیو دسته‌بندی‌ها) نیز اعمال می‌کند و نیازی به تنظیم Query ID برای آن صفحات نیست.', 'woo-custom-loop-filters'); ?></li>
-                    <li><strong><?php esc_html_e('شمارش بازدید محصولات:', 'woo-custom-loop-filters'); ?></strong> <?php esc_html_e('تعداد بازدیدها در متای post_views ثبت می‌شود. برای جلوگیری از ثبت تکراری بازدیدها توسط یک کاربر یا ربات‌های خزنده، از مکانیزم بررسی کوکی و ربات‌یاب استفاده شده است.', 'woo-custom-loop-filters'); ?></li>
-                    <li><strong><?php esc_html_e('محاسبه درصد تخفیف:', 'woo-custom-loop-filters'); ?></strong> <?php esc_html_e('درصد تخفیف هر محصول در زمان ذخیره یا بروزرسانی در متای _discount_percentage ذخیره می‌شود تا قابلیت مرتب‌سازی بر اساس بیشترین تخفیف با سرعت بالا اجرا شود.', 'woo-custom-loop-filters'); ?></li>
+                <ul>
+                    <li><strong><?php esc_html_e('سازگاری کامل با صفحات آرشیو:', 'woo-custom-loop-filters'); ?></strong> <?php esc_html_e('این افزونه به صورت خودکار فیلترها را روی صفحات پیش‌فرض فروشگاه ووکامرس (Shop Archive) و صفحات آرشیو دسته‌بندی و برچسب نیز اعمال می‌کند و نیازی به شناسه کوئری برای آن‌ها نیست.', 'woo-custom-loop-filters'); ?></li>
+                    <li><strong><?php esc_html_e('بهینه‌سازی دیتابیس:', 'woo-custom-loop-filters'); ?></strong> <?php esc_html_e('درصد تخفیف محصولات و تعداد بازدیدها به صورت پیش‌محاسبه در دیتابیس (فیلدهای متای اختصاصی) ثبت می‌شوند تا سرعت پاسخ‌دهی فیلترها و مرتب‌سازی در سایت‌های با تعداد محصول زیاد دچار افت نشود.', 'woo-custom-loop-filters'); ?></li>
+                    <li><strong><?php esc_html_e('بروزرسانی ایجکس متقاطع:', 'woo-custom-loop-filters'); ?></strong> <?php esc_html_e('تمام المان‌های فیلتر در صورت قرارگیری در بخش‌های مختلف (مانند سایدبار، فوتر یا هدر) به صورت متقاطع بروزرسانی شده و وضعیت‌های انتخاب‌شده را حفظ می‌کنند.', 'woo-custom-loop-filters'); ?></li>
                 </ul>
             </div>
         </div>

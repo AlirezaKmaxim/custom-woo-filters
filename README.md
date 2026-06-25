@@ -2,7 +2,7 @@
 
 A comprehensive OOP WordPress plugin to filter and sort products in **Elementor Loop Grid** and **WooCommerce default shop archives** using a single Query ID and URL parameters.
 
-**Version:** 1.1.0  
+**Version:** 1.3.1  
 **Author:** [AlirezaKMaxim](https://github.com/AlirezaKmaxim)  
 **License:** GPLv2  
 **Text Domain:** `woo-custom-loop-filters`
@@ -60,6 +60,7 @@ The plugin automatically hooks into `woocommerce_product_query`, so filters work
 | `[elementor_price_filter]` | Dual-handle price range slider with apply/reset |
 | `[elementor_category_filter]` | Radio list of product categories |
 | `[elementor_stock_filter]` | Toggle switch for in-stock filtering |
+| `[elementor_attribute_filter attribute="color"]` | List of terms for specified attribute (e.g., color) |
 | `[beban_product_filters]` | Horizontal sort links (discount, popularity, date, sales, price) |
 
 ### URL Parameters
@@ -70,6 +71,7 @@ The plugin automatically hooks into `woocommerce_product_query`, so filters work
 | `max_price` | number | Maximum price filter |
 | `product_cat_filter` | category slug | Filter by category |
 | `stock_filter` | `instock` | Show only in-stock products |
+| `filter_{attribute}` | term slug | Filter by WooCommerce attribute (e.g. `filter_color=blue`) |
 | `orderby` | `discount`, `popularity`, `date`, `sales`, `price`, `price-desc` | Sort order |
 
 ---
@@ -82,9 +84,11 @@ woo-custom-loop-filters/
 ├── assets/
 │   ├── css/                             # Placeholder (theme handles styling)
 │   └── js/
+│       ├── wclf-ajax-core.js            # Core AJAX page content swapping UI
 │       ├── wclf-price-filter.js         # Price slider UI
 │       ├── wclf-category-filter.js      # Category radio UI
-│       └── wclf-stock-filter.js         # Stock toggle UI
+│       ├── wclf-stock-filter.js         # Stock toggle UI
+│       └── wclf-attribute-filter.js     # Attribute filter radio UI
 └── includes/
     ├── class-wclf-product-meta.php      # Product meta management
     ├── class-wclf-query-handler.php     # WP_Query modification engine

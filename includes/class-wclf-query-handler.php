@@ -100,6 +100,25 @@ class WCLF_Query_Handler {
             $query->set('tax_query', $tax_query);
         }
 
+        // 2b. Attribute Filters
+        foreach ($_GET as $key => $value) {
+            if (strpos($key, 'filter_') === 0 && !empty($value)) {
+                $attribute_name = substr($key, 7);
+                $taxonomy = 'pa_' . $attribute_name;
+                if (taxonomy_exists($taxonomy)) {
+                    $terms = explode(',', sanitize_text_field($value));
+                    $tax_query = $query->get('tax_query') ?: array();
+                    $tax_query[] = array(
+                        'taxonomy' => $taxonomy,
+                        'field'    => 'slug',
+                        'terms'    => $terms,
+                        'operator' => 'IN',
+                    );
+                    $query->set('tax_query', $tax_query);
+                }
+            }
+        }
+
         // 3. Stock Status Filter
         if (isset($_GET['stock_filter']) && $_GET['stock_filter'] === 'instock') {
             $meta_query = $query->get('meta_query') ?: array();

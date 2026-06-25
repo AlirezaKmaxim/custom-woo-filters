@@ -1,7 +1,7 @@
 (function() {
     'use strict';
 
-    document.addEventListener('DOMContentLoaded', function() {
+    window.wclf_init_category_filter = function() {
         const wrapper = document.getElementById('categoryFilterWrapper');
         if (!wrapper) return;
 
@@ -9,9 +9,11 @@
         const content = document.getElementById('catFilterContent');
 
         if (toggleBtn && content) {
-            toggleBtn.addEventListener('click', function() {
+            const newToggle = toggleBtn.cloneNode(true);
+            toggleBtn.parentNode.replaceChild(newToggle, toggleBtn);
+            newToggle.addEventListener('click', function() {
                 content.classList.toggle('open');
-                toggleBtn.classList.toggle('active');
+                newToggle.classList.toggle('active');
             });
         }
 
@@ -26,8 +28,14 @@
                     url.searchParams.set('product_cat_filter', this.value);
                 }
                 
-                window.location.href = url.toString();
+                window.wclf_apply_filters(url.toString());
             });
         });
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.wclf_init_category_filter);
+    } else {
+        window.wclf_init_category_filter();
+    }
 })();

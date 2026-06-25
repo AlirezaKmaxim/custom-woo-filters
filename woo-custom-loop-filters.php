@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Custom Loop Filters
  * Plugin URI: https://example.com/
  * Description: A comprehensive OOP plugin to filter and sort products in Elementor Loop Grid and WooCommerce default shop archives using a single Query ID.
- * Version: 1.1.0
+ * Version: 1.4.0
  * Author: AlirezaKMaxim
  * Author URL:https://github.com/AlirezaKmaxim/
  * License: GPL2
