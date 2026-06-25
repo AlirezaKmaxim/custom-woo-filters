@@ -2,7 +2,7 @@
 
 A comprehensive OOP WordPress plugin to filter and sort products in **Elementor Loop Grid** and **WooCommerce default shop archives** using a single Query ID and URL parameters.
 
-**Version:** 1.3.1  
+**Version:** 1.4.2  
 **Author:** [AlirezaKMaxim](https://github.com/AlirezaKmaxim)  
 **License:** GPLv2  
 **Text Domain:** `woo-custom-loop-filters`
