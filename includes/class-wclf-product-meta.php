@@ -7,23 +7,13 @@ class WCLF_Product_Meta {
      * Constructor.
      */
     public function __construct() {
-        add_action('woocommerce_update_product', array($this, 'on_product_changed'));
-        add_action('woocommerce_new_product', array($this, 'on_product_changed'));
+        add_action('woocommerce_update_product', array($this, 'clear_price_transient'));
+        add_action('woocommerce_new_product', array($this, 'clear_price_transient'));
         add_action('woocommerce_delete_product', array($this, 'clear_price_transient'));
         add_action('wp_trash_post', array($this, 'clear_price_transient_on_trash'));
         add_action('untrash_post', array($this, 'clear_price_transient_on_trash'));
         
         add_action('template_redirect', array($this, 'track_product_views'));
-    }
-
-    /**
-     * Clear transient cache and calculate discount percentage when product is changed.
-     *
-     * @param int $product_id Product ID.
-     */
-    public function on_product_changed($product_id) {
-        $this->clear_price_transient();
-        $this->update_discount_percentage($product_id);
     }
 
     /**
@@ -41,35 +31,6 @@ class WCLF_Product_Meta {
     public function clear_price_transient_on_trash($post_id) {
         if ('product' === get_post_type($post_id)) {
             $this->clear_price_transient();
-        }
-    }
-
-    /**
-     * Calculate discount percentage when product is saved.
-     *
-     * @param int $product_id Product ID.
-     */
-    public function update_discount_percentage($product_id) {
-        // Prevent recursive loops
-        static $processed_products = array();
-        if (in_array($product_id, $processed_products, true)) {
-            return;
-        }
-        $processed_products[] = $product_id;
-
-        $product = wc_get_product($product_id);
-        if (!$product) {
-            return;
-        }
-
-        $regular_price = $product->get_regular_price();
-        $sale_price = $product->get_sale_price();
-
-        if ($regular_price && $sale_price && $regular_price > 0) {
-            $discount = (($regular_price - $sale_price) / $regular_price) * 100;
-            update_post_meta($product_id, '_discount_percentage', round($discount, 2));
-        } else {
-            update_post_meta($product_id, '_discount_percentage', 0);
         }
     }
 

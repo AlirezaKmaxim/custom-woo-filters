@@ -45,6 +45,7 @@
 
         const spinner = document.createElement('div');
         spinner.className = 'wclf-spinner';
+        spinner.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><style>.spinner_z9k8{transform-origin:center;animation:spinner_StKS .75s infinite linear}@keyframes spinner_StKS{100%{transform:rotate(360deg)}}</style><path d="M12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,19a8,8,0,1,1,8-8A8,8,0,0,1,12,20Z" opacity=".25" fill="#999999"/><path d="M12,4a8,8,0,0,1,7.89,6.7A1.53,1.53,0,0,0,21.38,12h0a1.5,1.5,0,0,0,1.48-1.75,11,11,0,0,0-21.72,0A1.5,1.5,0,0,0,2.62,12h0a1.53,1.53,0,0,0,1.49-1.3A8,8,0,0,1,12,4Z" class="spinner_z9k8" fill="#333333"/></svg>';
 
         // Ensure preloader CSS exists in head
         if (!document.getElementById('wclf-spinner-styles')) {
@@ -52,24 +53,21 @@
             styleSheet.id = 'wclf-spinner-styles';
             styleSheet.type = 'text/css';
             styleSheet.innerText = `
-                @keyframes wclf-spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
                 .wclf-ajax-overlay {
                     position: absolute !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
+                    top: -15px !important;
+                    left: -15px !important;
+                    right: -15px !important;
+                    bottom: -15px !important;
+                    width: auto !important;
+                    height: auto !important;
                     background-color: rgba(255, 255, 255, 0.4) !important;
                     backdrop-filter: blur(10px) !important;
                     -webkit-backdrop-filter: blur(10px) !important;
-                    z-index: 9999 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
+                    z-index: 98 !important;
+                    display: block !important;
                     pointer-events: auto !important;
+                    border-radius: 12px !important;
                 }
                 .wclf-spinner {
                     position: fixed !important;
@@ -78,11 +76,15 @@
                     transform: translate(-50%, -50%) !important;
                     width: 40px !important;
                     height: 40px !important;
-                    border: 4px solid rgba(0, 0, 0, 0.1) !important;
-                    border-top: 4px solid #e7a439 !important;
-                    border-radius: 50% !important;
-                    animation: wclf-spin 1s linear infinite !important;
-                    z-index: 10000 !important;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 99999 !important;
+                }
+                @media (min-width: 768px) {
+                    .wclf-spinner {
+                        top: 30% !important;
+                    }
                 }
             `;
             document.head.appendChild(styleSheet);

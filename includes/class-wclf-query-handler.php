@@ -141,9 +141,24 @@ class WCLF_Query_Handler {
 
         switch ($orderby) {
             case 'discount':
-                $query->set('meta_key', '_discount_percentage');
-                $query->set('orderby', 'meta_value_num');
-                $query->set('order', 'DESC');
+                $meta_query = $query->get('meta_query') ?: array();
+                $meta_query[] = array(
+                    'relation' => 'OR',
+                    'wclf_discount' => array(
+                        'key'     => '_custom_discount_percentage',
+                        'compare' => 'EXISTS',
+                        'type'    => 'NUMERIC',
+                    ),
+                    array(
+                        'key'     => '_custom_discount_percentage',
+                        'compare' => 'NOT EXISTS',
+                    )
+                );
+                $query->set('meta_query', $meta_query);
+                $query->set('orderby', array(
+                    'wclf_discount' => 'DESC',
+                    'date'          => 'DESC'
+                ));
                 break;
                 
             case 'popularity':

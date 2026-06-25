@@ -26,35 +26,35 @@ class WCLF_Shortcodes {
             'wclf-ajax-core',
             WCLF_PLUGIN_URL . 'assets/js/wclf-ajax-core.js',
             array(),
-            '1.3.1',
+            '1.5.2',
             true
         );
         wp_register_script(
             'wclf-price-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-price-filter.js',
             array('wclf-ajax-core'),
-            '1.3.1',
+            '1.5.2',
             true
         );
         wp_register_script(
             'wclf-category-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-category-filter.js',
             array('wclf-ajax-core'),
-            '1.3.1',
+            '1.5.2',
             true
         );
         wp_register_script(
             'wclf-stock-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-stock-filter.js',
             array('wclf-ajax-core'),
-            '1.3.1',
+            '1.5.2',
             true
         );
         wp_register_script(
             'wclf-attribute-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-attribute-filter.js',
             array('wclf-ajax-core'),
-            '1.3.1',
+            '1.5.2',
             true
         );
     }
@@ -435,10 +435,10 @@ class WCLF_Shortcodes {
         }
 
         $atts = shortcode_atts(array(
-            'show_total'     => 'yes',
-            'label_filtered' => 'نمایش {filtered} محصول',
-            'label_both'     => 'نمایش {filtered} محصول از {total} محصول',
-            'label_total'    => 'نمایش {total} محصول',
+            'show_total'     => 'no',
+            'label_filtered' => '{filtered} کالا',
+            'label_both'     => '{filtered} کالا از {total} کالا',
+            'label_total'    => '{total} کالا',
         ), $atts, 'wclf_product_count');
 
         // Check if any filters are active
@@ -456,7 +456,7 @@ class WCLF_Shortcodes {
         $args = array(
             'post_type'      => 'product',
             'post_status'    => 'publish',
-            'posts_per_page' => -1,
+            'posts_per_page' => 1,
             'fields'         => 'ids',
         );
 

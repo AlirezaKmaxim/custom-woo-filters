@@ -1,0 +1,14 @@
+﻿
+# فایل‌های خاص پروژه
+architecture.md
+
+
+
+# فایل‌های کامپایل و بیلد
+dist/
+build/
+*.log
+
+# فایل‌های سیستمی
+.DS_Store
+Thumbs.db
