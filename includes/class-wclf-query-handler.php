@@ -135,13 +135,8 @@ class WCLF_Query_Handler {
         // 4. Sorting Logic
         $orderby = isset($_GET['orderby']) ? wc_clean(wp_unslash($_GET['orderby'])) : '';
 
-        // Default orderby for shop archives if not set in URL
         if (empty($orderby)) {
-            if (is_shop() || is_product_category() || is_product_tag()) {
-                $orderby = 'popularity';
-            } else {
-                return;
-            }
+            return;
         }
 
         switch ($orderby) {
@@ -152,15 +147,29 @@ class WCLF_Query_Handler {
                 break;
                 
             case 'popularity':
-                $query->set('meta_key', 'post_views');
-                $query->set('orderby', 'meta_value_num');
-                $query->set('order', 'DESC');
+                $meta_query = $query->get('meta_query') ?: array();
+                $meta_query[] = array(
+                    'relation' => 'OR',
+                    'wclf_views' => array(
+                        'key'     => 'post_views',
+                        'compare' => 'EXISTS',
+                        'type'    => 'NUMERIC',
+                    ),
+                    array(
+                        'key'     => 'post_views',
+                        'compare' => 'NOT EXISTS',
+                    )
+                );
+                $query->set('meta_query', $meta_query);
+                $query->set('orderby', array(
+                    'wclf_views' => 'DESC',
+                    'date'       => 'DESC'
+                ));
                 break;
                 
             case 'date':
                 $query->set('orderby', 'date');
                 $query->set('order', 'DESC');
-                // Remove meta_key to prevent filtering out products without this meta key
                 $query->set('meta_key', '');
                 break;
                 

@@ -69,7 +69,7 @@ class WCLF_Product_Meta {
             $discount = (($regular_price - $sale_price) / $regular_price) * 100;
             update_post_meta($product_id, '_discount_percentage', round($discount, 2));
         } else {
-            delete_post_meta($product_id, '_discount_percentage');
+            update_post_meta($product_id, '_discount_percentage', 0);
         }
     }
 
