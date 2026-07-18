@@ -8,7 +8,7 @@ This file is a complete reference for AI agents working on this codebase. It cov
 
 ## 1. What This Project Is
 
-A **WordPress/WooCommerce plugin** (version 2.9.5) that adds AJAX-powered product filters to WooCommerce product listings. It works with both **Elementor Loop Grid** widgets and **native WooCommerce shop/category archives**. All filtering happens without page reloads. The plugin is built entirely in vanilla PHP and JavaScript with zero external dependencies.
+A **WordPress/WooCommerce plugin** (version 2.9.17) that adds AJAX-powered product filters to WooCommerce product listings. It works with both **Elementor Loop Grid** widgets and **native WooCommerce shop/category archives**. All filtering happens without page reloads. The plugin is built entirely in vanilla PHP and JavaScript with zero external dependencies.
 
 **Core idea:** The plugin hooks into WordPress query pipelines to modify product queries based on URL parameters, and provides 7 shortcodes that render filter UI widgets (price slider, category radio, brand radio, stock toggle, attribute radio, sorting dropdown, product count). A JavaScript AJAX engine fetches the full HTML page and swaps DOM containers to update both products and filters simultaneously.
 
@@ -34,7 +34,9 @@ A **WordPress/WooCommerce plugin** (version 2.9.5) that adds AJAX-powered produc
 #### `woo-custom-loop-filters.php` — Main Bootstrap
 - Defines the `WCLF_Bootstrap` singleton class
 - Sets constants: `WCLF_PLUGIN_DIR`, `WCLF_PLUGIN_URL`, `WCLF_VERSION`
-- Includes all PHP files from `includes/`
+- Declares `Requires Plugins: woocommerce` in the plugin header
+- If WooCommerce is missing: shows an admin error notice and skips includes/init
+- Includes all PHP files from `includes/` only when WooCommerce is active
 - Instantiates all components on `plugins_loaded` (ensures WooCommerce is loaded)
 - Registers deactivation hook to clear the `wclf_viewed_products` cookie
 
@@ -121,8 +123,8 @@ Hooks into three WordPress query paths:
 | `s` + `post_type=product` | Product search |
 
 **Sorting options:**
-- `discount` → `meta_value_num` on `discount_percentage`, DESC
-- `discount-asc` → `meta_value_num` on `discount_percentage`, ASC
+- `discount` → named meta clause on `discount_percentage`, DESC (does **not** hide products without discount)
+- `discount-asc` → named meta clause on `discount_percentage`, ASC (does **not** hide products without discount)
 - `popularity` → `meta_value_num` on `post_views`, DESC
 - `date` → `date`, DESC
 - `sales` → `meta_value_num` on `total_sales`, DESC
@@ -142,8 +144,8 @@ Hooks into three WordPress query paths:
 | `[elementor_category_filter]` | Category radio buttons | `contextual` (yes/no, default yes) |
 | `[elementor_brand_filter]` | Brand radio buttons | `taxonomy` (default auto-detect) |
 | `[elementor_stock_filter]` | In-stock toggle switch | none |
-| `[elementor_attribute_filter]` | Generic attribute radio buttons | `attribute` (required, e.g., "color") |
-| `[beban_product_filters]` | Sorting dropdown | none |
+| `[elementor_attribute_filter]` | Contextual attribute radio buttons | `attribute` (required, e.g., "color") |
+| `[beban_product_filters]` | Sorting links; "همه" clears only `orderby` | none |
 | `[wclf_product_count]` | Dynamic product count text | `show_total`, `label_filtered`, `label_both`, `label_total` |
 
 **Additional responsibilities:**

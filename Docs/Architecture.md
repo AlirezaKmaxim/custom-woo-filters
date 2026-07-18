@@ -6,7 +6,7 @@
 
 ## 1. System Overview
 
-WCLF is a WordPress plugin that intercepts WooCommerce product queries, applies URL-based filters, and renders updated filter UI via shortcodes. The frontend uses AJAX to fetch full HTML pages and surgically swap DOM containers, ensuring all server-rendered content remains consistent.
+WCLF (version **2.9.17**) is a WordPress plugin that intercepts WooCommerce product queries, applies URL-based filters, and renders updated filter UI via shortcodes. The frontend uses AJAX to fetch full HTML pages and surgically swap DOM containers, ensuring all server-rendered content remains consistent. WooCommerce is a hard dependency (`Requires Plugins: woocommerce` + runtime admin notice).
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -227,6 +227,7 @@ Current Page Context          →  Categories Shown
 /shop/                        →  Top-level categories (parent=0) with products
 /product-category/pen/        →  Direct children of "pen"
 /brand/nike/                  →  Categories that Nike products belong to
+/product-tag/.../ or search   →  Categories assigned to products in that result set
 Leaf category (no children)   →  Filter hidden entirely
 contextual="no" attribute     →  All categories site-wide
 ```
@@ -238,8 +239,8 @@ contextual="no" attribute     →  All categories site-wide
 2. If category archive:
    a. Get child terms of current category
    b. If no children → hide filter (CSS :has() collapse)
-3. If brand archive:
-   a. Get all products in current brand
+3. If brand / tag / search / other product tax archive:
+   a. Get products in current page scope
    b. Get unique categories those products belong to
 4. If shop:
    a. Get top-level categories with products

@@ -2,7 +2,7 @@
 
 ## WooCommerce Custom Loop Filters (WCLF)
 
-**Version:** 2.9.5
+**Version:** 2.9.17
 **Author:** AlirezaKMaxim
 **License:** GPL2
 
@@ -63,7 +63,7 @@ WooCommerce's default product listing page offers no built-in AJAX filtering. Me
 
 ### 5.2 Category Filter
 - **FR-05:** Radio button selector for product categories
-- **FR-06:** Contextual mode (`contextual="yes"`, default): shows only relevant categories based on archive context
+- **FR-06:** Contextual mode (`contextual="yes"`, default): shows only relevant categories based on archive context (shop top-level; category children; brand/tag/search categories from page products)
 - **FR-07:** Non-contextual mode (`contextual="no"`): shows all site-wide categories
 - **FR-08:** Auto-hides on leaf categories (categories with no children)
 - **FR-09:** Updates URL with `product_cat_filter` parameter (term ID)
@@ -82,10 +82,13 @@ WooCommerce's default product listing page offers no built-in AJAX filtering. Me
 - **FR-16:** Generic radio filter for any WooCommerce product attribute (color, size, etc.)
 - **FR-17:** Parameterized via `attribute="color"` shortcode attribute
 - **FR-18:** Updates URL with `filter_{attribute}` parameter
+- **FR-18b:** Terms are scoped to products in the current catalog / active filter set (cross-filtering)
 
 ### 5.6 Sorting
 - **FR-19:** Dropdown with 7 sort options: Discount, Discount (asc), Popularity, Date, Sales, Price, Price (desc), All
 - **FR-20:** Updates URL with `orderby` parameter
+- **FR-20b:** "همه" clears only `orderby` (other filters stay active)
+- **FR-20c:** `orderby=discount` / `discount-asc` sorts by `discount_percentage` without hiding products that have no discount
 
 ### 5.7 Product Count
 - **FR-21:** Dynamic product count display: "Showing X of Y products"
@@ -97,6 +100,10 @@ WooCommerce's default product listing page offers no built-in AJAX filtering. Me
 - **FR-25:** Loading overlay with spinner during fetch
 - **FR-26:** Browser history push/popstate support
 - **FR-27:** Graceful fallback to full page reload if no product container found
+
+### 5.8b Dependencies
+- **FR-27b:** Plugin header declares `Requires Plugins: woocommerce`
+- **FR-27c:** If WooCommerce is inactive, components do not boot and an admin error notice is shown
 
 ### 5.9 Product Meta
 - **FR-28:** Auto-calculate `discount_percentage` on product save (simple, variable, variation)
@@ -119,7 +126,7 @@ WooCommerce's default product listing page offers no built-in AJAX filtering. Me
 |---|---|
 | **Performance** | Request-level static caching, transient caching for price ranges (24h), optimized SQL queries with chunked batching (2,000 items) |
 | **Security** | All `$_GET` inputs sanitized (`intval`, `floatval`, `sanitize_text_field`, `sanitize_key`, `wc_clean`, `wp_unslash`). SQL uses `$wpdb->prepare()`. Admin actions verify capabilities and nonces |
-| **Compatibility** | WordPress (any recent version), WooCommerce (required), Elementor (optional), WP-CLI (optional) |
+| **Compatibility** | WordPress 5.8+, PHP 7.4+, WooCommerce (required via `Requires Plugins` + runtime check), Elementor (optional), WP-CLI (optional) |
 | **Accessibility** | RTL-first admin UI (Persian), standard form controls |
 | **Browser Support** | Modern browsers with `fetch()` and `DOMParser` support |
 | **No Build Step** | Vanilla JS, zero npm/composer dependencies |
