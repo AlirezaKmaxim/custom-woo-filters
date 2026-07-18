@@ -3,13 +3,17 @@
  * Plugin Name: WooCommerce Custom Loop Filters
  * Plugin URI: https://example.com/
  * Description: A comprehensive OOP plugin to filter and sort products in Elementor Loop Grid and WooCommerce default shop archives using a single Query ID.
- * Version: 2.9.15
+ * Version: 2.9.16
  * Author: AlirezaKMaxim
  * Author URL:https://github.com/AlirezaKmaxim/
  * License: GPL2
  * Text Domain: woo-custom-loop-filters
  * Domain Path: /languages
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
+ * Requires Plugins: woocommerce
  *
+ * Changelog (2.9.16): Hard WooCommerce dependency header + admin notice when missing.
  * Changelog (2.9.15): orderby=discount sorts only; does not hide non-sale products.
  * Changelog (2.9.14): Sorting "همه" clears only orderby, not other filters.
  * Changelog (2.9.13): Scope attribute filter terms to current catalog context.
@@ -51,8 +55,39 @@ class WCLF_Bootstrap {
      */
     private function __construct() {
         $this->define_constants();
+
+        if (!$this->is_woocommerce_active()) {
+            add_action('admin_notices', array($this, 'missing_woocommerce_notice'));
+            return;
+        }
+
         $this->includes();
         $this->init();
+    }
+
+    /**
+     * Whether WooCommerce is available.
+     *
+     * @return bool
+     */
+    private function is_woocommerce_active() {
+        return class_exists('WooCommerce');
+    }
+
+    /**
+     * Admin notice when WooCommerce is inactive.
+     */
+    public function missing_woocommerce_notice() {
+        if (!current_user_can('activate_plugins')) {
+            return;
+        }
+
+        echo '<div class="notice notice-error"><p>';
+        echo esc_html__(
+            'افزونه WooCommerce Custom Loop Filters برای اجرا به ووکامرس نیاز دارد. لطفاً ووکامرس را نصب و فعال کنید.',
+            'woo-custom-loop-filters'
+        );
+        echo '</p></div>';
     }
 
     /**
@@ -61,7 +96,7 @@ class WCLF_Bootstrap {
     private function define_constants() {
         define('WCLF_PLUGIN_DIR', plugin_dir_path(__FILE__));
         define('WCLF_PLUGIN_URL', plugin_dir_url(__FILE__));
-        define('WCLF_VERSION', '2.9.15');
+        define('WCLF_VERSION', '2.9.16');
     }
 
     /**
@@ -98,7 +133,7 @@ class WCLF_Bootstrap {
     }
 }
 
-// Instantiate the bootstrap class after plugins are loaded to ensure WooCommerce is loaded first
+// Instantiate after plugins are loaded so WooCommerce can register first.
 add_action('plugins_loaded', array('WCLF_Bootstrap', 'get_instance'));
 
 register_deactivation_hook(__FILE__, 'wclf_deactivate_plugin');
