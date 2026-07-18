@@ -2,18 +2,38 @@
 /**
  * WooCommerce Custom Loop Filters Uninstall
  *
- * Uninstalling WooCommerce Custom Loop Filters cleans up transient cache and post meta.
+ * Only removes plugin-owned options/transients (wclf_*).
+ * Does NOT delete shared product meta such as discount_percentage or post_views —
+ * those may be used by theme snippets / other code outside this plugin.
  *
  * @package WooCommerceCustomLoopFilters
- * @version 1.2.0
  */
 
 defined('WP_UNINSTALL_PLUGIN') || exit;
 
 global $wpdb;
 
-// 1. Delete transient cache
-delete_transient('wclf_min_max_prices');
+// Plugin-owned transients and options only.
+$wpdb->query(
+    "DELETE FROM {$wpdb->options}
+     WHERE option_name LIKE '_transient_wclf_%'
+        OR option_name LIKE '_transient_timeout_wclf_%'
+        OR option_name LIKE '_site_transient_wclf_%'
+        OR option_name LIKE '_site_transient_timeout_wclf_%'
+        OR option_name LIKE 'wclf_%'"
+);
 
-// 2. Delete product metadata fields
-$wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE meta_key IN ('_discount_percentage', 'post_views')");
+// Legacy transient keys created by early versions of this plugin.
+delete_transient('wclf_min_max_prices');
+delete_transient('wclf_min_max_prices_shop');
+
+// Clear this plugin's tracking cookie only (no postmeta / no shared keys).
+if (!headers_sent() && defined('COOKIEPATH') && defined('COOKIE_DOMAIN')) {
+    setcookie(
+        'wclf_viewed_products',
+        '',
+        time() - DAY_IN_SECONDS,
+        COOKIEPATH,
+        COOKIE_DOMAIN
+    );
+}

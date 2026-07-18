@@ -3,12 +3,20 @@
  * Plugin Name: WooCommerce Custom Loop Filters
  * Plugin URI: https://example.com/
  * Description: A comprehensive OOP plugin to filter and sort products in Elementor Loop Grid and WooCommerce default shop archives using a single Query ID.
- * Version: 1.5.3
+ * Version: 2.9.10
  * Author: AlirezaKMaxim
  * Author URL:https://github.com/AlirezaKmaxim/
  * License: GPL2
  * Text Domain: woo-custom-loop-filters
  * Domain Path: /languages
+ *
+ * Changelog (2.9.10): Do not rewrite Elementor library queries to product (fixes blank shop).
+ * Changelog (2.9.9): Prevent AJAX swap from wiping filters/template; safer overlay clip.
+ * Changelog (2.9.8): Center spinner in viewport; clip blur overlay to products area only.
+ * Changelog (2.9.7): Admin spinner color option; keep preloader in top third of viewport.
+ * Changelog (2.9.6): Fix mobile horizontal overflow while AJAX filter overlay is shown.
+ * Changelog (2.9.5): Uninstall only clears wclf_* data (keeps discount_percentage /
+ * post_views). Discount rebuild + Elementor leaf CSS fixes from 2.9.4.
  */
 
 defined('ABSPATH') || exit;
@@ -55,9 +63,11 @@ class WCLF_Bootstrap {
      */
     private function includes() {
         require_once WCLF_PLUGIN_DIR . 'includes/class-wclf-product-meta.php';
+        require_once WCLF_PLUGIN_DIR . 'includes/class-wclf-query-helper.php';
         require_once WCLF_PLUGIN_DIR . 'includes/class-wclf-query-handler.php';
         require_once WCLF_PLUGIN_DIR . 'includes/class-wclf-shortcodes.php';
         require_once WCLF_PLUGIN_DIR . 'includes/class-wclf-admin.php';
+        require_once WCLF_PLUGIN_DIR . 'includes/class-wclf-scenario-tester.php';
     }
 
     /**
@@ -76,8 +86,30 @@ class WCLF_Bootstrap {
         if (class_exists('WCLF_Admin')) {
             new WCLF_Admin();
         }
+        if (class_exists('WCLF_Scenario_Tester')) {
+            WCLF_Scenario_Tester::register_cli();
+        }
     }
 }
 
 // Instantiate the bootstrap class after plugins are loaded to ensure WooCommerce is loaded first
 add_action('plugins_loaded', array('WCLF_Bootstrap', 'get_instance'));
+
+register_deactivation_hook(__FILE__, 'wclf_deactivate_plugin');
+
+/**
+ * Cleanup on plugin deactivation.
+ */
+function wclf_deactivate_plugin() {
+    if (headers_sent() || !defined('COOKIEPATH') || !defined('COOKIE_DOMAIN')) {
+        return;
+    }
+
+    setcookie(
+        'wclf_viewed_products',
+        '',
+        time() - DAY_IN_SECONDS,
+        COOKIEPATH,
+        COOKIE_DOMAIN
+    );
+}
