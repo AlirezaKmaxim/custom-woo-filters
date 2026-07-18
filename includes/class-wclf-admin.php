@@ -442,7 +442,7 @@ class WCLF_Admin {
                     <?php esc_html_e('بازمحاسبه درصد تخفیف', 'woo-custom-loop-filters'); ?>
                 </h2>
                 <p>
-                    <?php esc_html_e('متای discount_percentage را برای همه محصولات منتشرشده دوباره محاسبه می‌کند. برای نمایش بج روی کارت محصول و مرتب‌سازی ?orderby=discount لازم است.', 'woo-custom-loop-filters'); ?>
+                    <?php esc_html_e('متای discount_percentage را برای همه محصولات منتشرشده دوباره محاسبه می‌کند. برای بج تخفیف و گزینه «تخفیف‌دارها» (?orderby=discounted) لازم است.', 'woo-custom-loop-filters'); ?>
                 </p>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                     <input type="hidden" name="action" value="wclf_recalculate_discounts">
@@ -693,12 +693,12 @@ class WCLF_Admin {
                             </td>
                             <td>
                                 <strong><?php esc_html_e('مرتب‌سازی پیشرفته محصولات:', 'woo-custom-loop-filters'); ?></strong>
-                                <?php esc_html_e('۷ حالت مرتب‌سازی به‌علاوه گزینه «همه»: بیشترین تخفیف، کمترین تخفیف، پربازدیدترین، جدیدترین، پرفروش‌ترین، ارزان‌ترین و گران‌ترین.', 'woo-custom-loop-filters'); ?>
+                                <?php esc_html_e('گزینه‌های مرتب‌سازی به‌علاوه «همه»: تخفیف‌دارها، پربازدیدترین، جدیدترین، پرفروش‌ترین، ارزان‌ترین و گران‌ترین.', 'woo-custom-loop-filters'); ?>
                                 <br>
                                 <strong><?php esc_html_e('نکته تخفیف:', 'woo-custom-loop-filters'); ?></strong>
-                                <?php esc_html_e('مرتب‌سازی تخفیف فقط محصولات دارای تخفیف و موجود را نشان می‌دهد. درصد تخفیف در meta ', 'woo-custom-loop-filters'); ?>
+                                <?php esc_html_e('گزینه «تخفیف‌دارها» فقط محصولات دارای تخفیف را نشان می‌دهد (مرتب‌شده از بیشترین درصد). درصد در meta ', 'woo-custom-loop-filters'); ?>
                                 <code class="wclf-code-param">discount_percentage</code>
-                                <?php esc_html_e(' ذخیره می‌شود (محصول متغیر: بیشترین تخفیف variationهای موجود).', 'woo-custom-loop-filters'); ?>
+                                <?php esc_html_e(' ذخیره می‌شود.', 'woo-custom-loop-filters'); ?>
                             </td>
                         </tr>
                         <!-- شمارنده محصولات جدید -->
@@ -726,6 +726,49 @@ class WCLF_Admin {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            </div>
+
+            <!-- مودال موبایل -->
+            <div class="card card-info">
+                <h2>
+                    <span class="dashicons dashicons-smartphone"></span>
+                    <?php esc_html_e('مودال موبایل (Elementor Triggers)', 'woo-custom-loop-filters'); ?>
+                </h2>
+                <p>
+                    <?php esc_html_e('در موبایل می‌توانید ۲ آیکن SVG با المنتور بگذارید تا فیلترها و مرتب‌سازی داخل bottom-sheet باز شوند. دسکتاپ بدون تغییر می‌ماند.', 'woo-custom-loop-filters'); ?>
+                </p>
+                <table class="wclf-admin-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%;"><?php esc_html_e('کلاس CSS', 'woo-custom-loop-filters'); ?></th>
+                            <th style="width: 60%;"><?php esc_html_e('نقش', 'woo-custom-loop-filters'); ?></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code class="wclf-code-param">wclf-open-filters</code></td>
+                            <td><?php esc_html_e('تریگر آیکن فیلترها (روی ویجت آیکن/HTML در Advanced → CSS Classes)', 'woo-custom-loop-filters'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code class="wclf-code-param">wclf-open-sorting</code></td>
+                            <td><?php esc_html_e('تریگر آیکن مرتب‌سازی', 'woo-custom-loop-filters'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code class="wclf-code-param">wclf-mobile-filters-source</code></td>
+                            <td><?php esc_html_e('کانتینر والد سایدبار که داخلش دسته + برند + قیمت است', 'woo-custom-loop-filters'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code class="wclf-code-param">wclf-mobile-sorting-source</code></td>
+                            <td><?php esc_html_e('کانتینر والد مرتب‌سازی [beban_product_filters]', 'woo-custom-loop-filters'); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="wclf-note-box">
+                    <strong><?php esc_html_e('نکته موبایل:', 'woo-custom-loop-filters'); ?></strong>
+                    <?php esc_html_e('زیر ۷۶۸px منبع‌ها از جریان صفحه مخفی می‌شوند و داخل مودال نمایش داده می‌شوند. انتخاب فیلتر مودال را می‌بندد. آیکن‌ها را در دسکتاپ با تنظیمات Responsive المنتور مخفی کنید.', 'woo-custom-loop-filters'); ?>
+                </div>
             </div>
 
             <!-- فیلتر هوشمند دسته‌بندی -->
@@ -817,8 +860,7 @@ class WCLF_Admin {
                             <td><?php esc_html_e('string', 'woo-custom-loop-filters'); ?></td>
                             <td>
                                 <?php esc_html_e('مرتب‌سازی:', 'woo-custom-loop-filters'); ?>
-                                <code class="wclf-code-param">discount</code>,
-                                <code class="wclf-code-param">discount-asc</code>,
+                                <code class="wclf-code-param">discounted</code>,
                                 <code class="wclf-code-param">popularity</code>,
                                 <code class="wclf-code-param">date</code>,
                                 <code class="wclf-code-param">sales</code>,

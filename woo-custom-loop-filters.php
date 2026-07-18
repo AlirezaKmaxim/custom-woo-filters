@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Custom Loop Filters
  * Plugin URI: https://example.com/
  * Description: A comprehensive OOP plugin to filter and sort products in Elementor Loop Grid and WooCommerce default shop archives using a single Query ID.
- * Version: 2.9.18
+ * Version: 2.9.30
  * Author: AlirezaKMaxim
  * Author URL:https://github.com/AlirezaKmaxim/
  * License: GPL2
@@ -13,6 +13,18 @@
  * Requires PHP: 7.4
  * Requires Plugins: woocommerce
  *
+ * Changelog (2.9.30): Match plus/minus accordion icon visual size.
+ * Changelog (2.9.29): Swipe-down to close mobile bottom-sheets.
+ * Changelog (2.9.28): Fix accordion +/- visibility; enlarge icons.
+ * Changelog (2.9.27): Filter accordion icons use plus/minus SVG assets.
+ * Changelog (2.9.26): Mobile sheet filter gap 8px; price open by default, others collapsed.
+ * Changelog (2.9.25): Larger SVG close icon on mobile bottom-sheets.
+ * Changelog (2.9.24): Replace min/max discount sorts with single "تخفیف‌دارها" option.
+ * Changelog (2.9.23): Mobile bottom-sheets wired to Elementor trigger/source CSS classes.
+ * Changelog (2.9.22): Keep scrollbar visible during preloader (event-based scroll lock).
+ * Changelog (2.9.21): Prevent viewport shift when scrollbar hides during AJAX preloader.
+ * Changelog (2.9.20): Empty filter results message + reset-filters button.
+ * Changelog (2.9.19): Fix horizontal overflow while full-page preloader/blur is shown.
  * Changelog (2.9.18): Full-page blur overlay + preloader; no-cache headers for filtered URLs.
  * Changelog (2.9.17): Sync PRD/Architecture/AI-AGENTS docs with 2.9.11–2.9.16 behavior.
  * Changelog (2.9.16): Hard WooCommerce dependency header + admin notice when missing.
@@ -98,7 +110,7 @@ class WCLF_Bootstrap {
     private function define_constants() {
         define('WCLF_PLUGIN_DIR', plugin_dir_path(__FILE__));
         define('WCLF_PLUGIN_URL', plugin_dir_url(__FILE__));
-        define('WCLF_VERSION', '2.9.18');
+        define('WCLF_VERSION', '2.9.30');
     }
 
     /**

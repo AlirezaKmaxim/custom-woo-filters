@@ -51,6 +51,184 @@
         return maxCount;
     };
 
+    window.wclf_filter_param_keys = [
+        'min_price',
+        'max_price',
+        'product_cat_filter',
+        'product_brand_filter',
+        'stock_filter',
+        'orderby'
+    ];
+
+    window.wclf_has_active_filters = function(urlString) {
+        try {
+            const url = new URL(urlString || window.location.href, window.location.origin);
+            for (let i = 0; i < window.wclf_filter_param_keys.length; i++) {
+                const key = window.wclf_filter_param_keys[i];
+                if (url.searchParams.has(key) && url.searchParams.get(key) !== '') {
+                    return true;
+                }
+            }
+            const keys = url.searchParams.keys();
+            let entry = keys.next();
+            while (!entry.done) {
+                if (String(entry.value).indexOf('filter_') === 0 && url.searchParams.get(entry.value) !== '') {
+                    return true;
+                }
+                entry = keys.next();
+            }
+        } catch (e) {
+            return false;
+        }
+        return false;
+    };
+
+    window.wclf_get_clear_filters_url = function() {
+        const url = new URL(window.location.href);
+        window.wclf_filter_param_keys.forEach(function(key) {
+            url.searchParams.delete(key);
+        });
+        const toDelete = [];
+        url.searchParams.forEach(function(value, key) {
+            if (String(key).indexOf('filter_') === 0) {
+                toDelete.push(key);
+            }
+        });
+        toDelete.forEach(function(key) {
+            url.searchParams.delete(key);
+        });
+        return url.toString();
+    };
+
+    window.wclf_ensure_empty_styles = function() {
+        if (document.getElementById('wclf-empty-results-styles')) {
+            return;
+        }
+        const styleSheet = document.createElement('style');
+        styleSheet.id = 'wclf-empty-results-styles';
+        styleSheet.type = 'text/css';
+        styleSheet.textContent = `
+            .wclf-empty-results {
+                width: 100%;
+                max-width: 480px;
+                margin: 48px auto;
+                padding: 28px 24px;
+                text-align: center;
+                box-sizing: border-box;
+                direction: rtl;
+            }
+            .wclf-empty-results__title {
+                margin: 0 0 10px;
+                font-size: 1.15rem;
+                font-weight: 700;
+                color: #1f2937;
+                line-height: 1.5;
+            }
+            .wclf-empty-results__message {
+                margin: 0 0 20px;
+                font-size: 0.95rem;
+                color: #6b7280;
+                line-height: 1.7;
+            }
+            .wclf-empty-results__reset {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 44px;
+                padding: 10px 22px;
+                border: 0;
+                border-radius: 8px;
+                background: #e7a439;
+                color: #fff;
+                font-size: 0.95rem;
+                font-weight: 600;
+                cursor: pointer;
+                text-decoration: none;
+                line-height: 1.4;
+            }
+            .wclf-empty-results__reset:hover,
+            .wclf-empty-results__reset:focus {
+                background: #d0922f;
+                color: #fff;
+                outline: none;
+            }
+        `;
+        document.head.appendChild(styleSheet);
+    };
+
+    window.wclf_remove_empty_results = function(container) {
+        if (!container) {
+            return;
+        }
+        const existing = container.querySelectorAll('.wclf-empty-results');
+        existing.forEach(function(el) {
+            el.remove();
+        });
+    };
+
+    window.wclf_show_empty_results = function(container) {
+        if (!container) {
+            return;
+        }
+
+        window.wclf_ensure_empty_styles();
+        window.wclf_remove_empty_results(container);
+
+        const i18n = (window.wclfDebugConfig && window.wclfDebugConfig.i18n)
+            ? window.wclfDebugConfig.i18n
+            : {};
+        const title = i18n.emptyTitle || 'محصولی با این فیلترها پیدا نشد';
+        const message = i18n.emptyMessage || 'لطفاً فیلترها را پاک کنید و دوباره جستجو کنید.';
+        const resetLabel = i18n.resetButton || 'پاک کردن فیلترها';
+
+        const wrap = document.createElement('div');
+        wrap.className = 'wclf-empty-results';
+        wrap.setAttribute('role', 'status');
+        wrap.innerHTML =
+            '<p class="wclf-empty-results__title"></p>' +
+            '<p class="wclf-empty-results__message"></p>' +
+            '<button type="button" class="wclf-empty-results__reset"></button>';
+
+        wrap.querySelector('.wclf-empty-results__title').textContent = title;
+        wrap.querySelector('.wclf-empty-results__message').textContent = message;
+        const resetBtn = wrap.querySelector('.wclf-empty-results__reset');
+        resetBtn.textContent = resetLabel;
+        resetBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const href = window.wclf_get_clear_filters_url();
+            window.wclf_log('info', 'Empty-state reset clicked', { href: href });
+            if (typeof window.wclf_apply_filters === 'function') {
+                window.wclf_apply_filters(href);
+            } else {
+                window.location.href = href;
+            }
+        });
+
+        container.innerHTML = '';
+        container.appendChild(wrap);
+        window.wclf_log('info', 'Empty results UI rendered');
+    };
+
+    window.wclf_maybe_show_empty_results = function(container, urlHint) {
+        if (!container) {
+            return false;
+        }
+
+        const count = window.wclf_count_products_in_container(container);
+        const hasFilters = window.wclf_has_active_filters(urlHint || window.location.href);
+
+        if (count === 0 && hasFilters) {
+            window.wclf_show_empty_results(container);
+            return true;
+        }
+
+        if (count > 0) {
+            window.wclf_remove_empty_results(container);
+        }
+
+        return false;
+    };
+
     window.wclf_filter_marker_selector = [
         '#priceFilterWrapper',
         '#categoryFilterWrapper',
@@ -116,14 +294,35 @@
 
         const htmlEl = document.documentElement;
         const bodyEl = document.body;
-        const previousHtmlOverflow = htmlEl.style.overflow;
-        const previousBodyOverflow = bodyEl.style.overflow;
-        htmlEl.style.overflow = 'hidden';
-        bodyEl.style.overflow = 'hidden';
 
-        const restoreOverflow = function() {
-            htmlEl.style.overflow = previousHtmlOverflow;
-            bodyEl.style.overflow = previousBodyOverflow;
+        // Do NOT set overflow:hidden — hiding the scrollbar shifts the viewport.
+        // Block scrolling with events while the overlay covers the page.
+        const preventScrollEvent = function(e) {
+            e.preventDefault();
+        };
+        const preventScrollKeys = function(e) {
+            const codes = [
+                'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown',
+                'Home', 'End', 'Space', ' ', 'Spacebar'
+            ];
+            if (codes.indexOf(e.key) !== -1 || codes.indexOf(e.code) !== -1) {
+                e.preventDefault();
+            }
+        };
+
+        document.addEventListener('wheel', preventScrollEvent, { passive: false });
+        document.addEventListener('touchmove', preventScrollEvent, { passive: false });
+        document.addEventListener('keydown', preventScrollKeys, { passive: false });
+
+        htmlEl.classList.add('wclf-ajax-loading');
+        bodyEl.classList.add('wclf-ajax-loading');
+
+        const unlockScroll = function() {
+            document.removeEventListener('wheel', preventScrollEvent, { passive: false });
+            document.removeEventListener('touchmove', preventScrollEvent, { passive: false });
+            document.removeEventListener('keydown', preventScrollKeys, { passive: false });
+            htmlEl.classList.remove('wclf-ajax-loading');
+            bodyEl.classList.remove('wclf-ajax-loading');
         };
 
         const removeSpinner = function() {
@@ -139,7 +338,7 @@
             if (activeOverlay) {
                 activeOverlay.remove();
             }
-            restoreOverflow();
+            unlockScroll();
         };
 
         const oldOverlay = document.querySelector('.wclf-ajax-overlay');
@@ -171,13 +370,20 @@
             document.head.appendChild(styleSheet);
         }
         styleSheet.textContent = `
+            html.wclf-ajax-loading,
+            body.wclf-ajax-loading {
+                overscroll-behavior: none !important;
+            }
             .wclf-ajax-overlay {
                 position: fixed !important;
-                inset: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                max-width: 100vw !important;
-                max-height: 100vh !important;
+                top: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                width: auto !important;
+                height: auto !important;
+                max-width: none !important;
+                max-height: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 box-sizing: border-box !important;
@@ -189,6 +395,7 @@
                 pointer-events: auto !important;
                 border-radius: 0 !important;
                 overflow: hidden !important;
+                touch-action: none !important;
             }
             .wclf-spinner {
                 position: fixed !important;
@@ -199,6 +406,8 @@
                 transform: translate(-50%, -50%) !important;
                 width: 40px !important;
                 height: 40px !important;
+                max-width: 40px !important;
+                max-height: 40px !important;
                 display: flex !important;
                 align-items: center;
                 justify-content: center;
@@ -264,6 +473,9 @@
                             window.wclf_log('warn', 'No products found after filter. Check PHP query / taxonomies / URL params.', {
                                 url: url
                             });
+                            window.wclf_maybe_show_empty_results(container, url);
+                        } else {
+                            window.wclf_remove_empty_results(container);
                         }
                     } else {
                         window.wclf_log('error', 'Matching container not found in AJAX response', {
@@ -316,6 +528,9 @@
                     if (typeof window.wclf_init_sorting_filter === 'function') {
                         window.wclf_init_sorting_filter();
                     }
+                    if (typeof window.wclf_init_mobile_sheets === 'function') {
+                        window.wclf_init_mobile_sheets();
+                    }
 
                     window.wclf_log('info', 'Filter re-initialization complete');
                 } finally {
@@ -356,20 +571,26 @@
         });
     };
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            window.wclf_log('info', 'WCLF AJAX core initialized', {
-                debugEnabled: window.wclf_is_debug_enabled(),
-                pageUrl: window.location.href
-            });
-            window.wclf_init_sorting_filter();
-        });
-    } else {
+    window.wclf_boot = function() {
         window.wclf_log('info', 'WCLF AJAX core initialized', {
             debugEnabled: window.wclf_is_debug_enabled(),
             pageUrl: window.location.href
         });
         window.wclf_init_sorting_filter();
+        if (typeof window.wclf_init_mobile_sheets === 'function') {
+            window.wclf_init_mobile_sheets();
+        }
+
+        const found = window.wclf_find_product_container(document);
+        if (found.container) {
+            window.wclf_maybe_show_empty_results(found.container);
+        }
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.wclf_boot);
+    } else {
+        window.wclf_boot();
     }
 
     window.addEventListener('popstate', function() {

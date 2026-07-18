@@ -95,46 +95,113 @@ class WCLF_Shortcodes {
             'wclf-ajax-core',
             'wclfDebugConfig',
             array(
-                'enabled' => (defined('WP_DEBUG') && WP_DEBUG) || (isset($_GET['wclf_debug']) && '1' === $_GET['wclf_debug']),
+                'enabled'      => (defined('WP_DEBUG') && WP_DEBUG) || (isset($_GET['wclf_debug']) && '1' === $_GET['wclf_debug']),
                 'spinnerColor' => $spinner_color,
+                'i18n'         => array(
+                    'emptyTitle'         => __('محصولی با این فیلترها پیدا نشد', 'woo-custom-loop-filters'),
+                    'emptyMessage'       => __('لطفاً فیلترها را پاک کنید و دوباره جستجو کنید.', 'woo-custom-loop-filters'),
+                    'resetButton'        => __('پاک کردن فیلترها', 'woo-custom-loop-filters'),
+                    'sheetFiltersTitle'  => __('فیلترها', 'woo-custom-loop-filters'),
+                    'sheetSortingTitle'  => __('مرتب‌سازی', 'woo-custom-loop-filters'),
+                    'sheetClose'         => __('بستن', 'woo-custom-loop-filters'),
+                ),
             )
+        );
+
+        wp_register_style(
+            'wclf-filters',
+            WCLF_PLUGIN_URL . 'assets/css/wclf-filters.css',
+            array(),
+            $version
+        );
+
+        wp_register_style(
+            'wclf-mobile-sheets',
+            WCLF_PLUGIN_URL . 'assets/css/wclf-mobile-sheets.css',
+            array('wclf-filters'),
+            $version
+        );
+
+        wp_register_script(
+            'wclf-mobile-sheets',
+            WCLF_PLUGIN_URL . 'assets/js/wclf-mobile-sheets.js',
+            array('wclf-ajax-core'),
+            $version,
+            true
         );
 
         wp_register_script(
             'wclf-price-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-price-filter.js',
-            array('wclf-ajax-core'),
+            array('wclf-ajax-core', 'wclf-mobile-sheets'),
             $version,
             true
         );
         wp_register_script(
             'wclf-category-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-category-filter.js',
-            array('wclf-ajax-core'),
+            array('wclf-ajax-core', 'wclf-mobile-sheets'),
             $version,
             true
         );
         wp_register_script(
             'wclf-brand-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-brand-filter.js',
-            array('wclf-ajax-core'),
+            array('wclf-ajax-core', 'wclf-mobile-sheets'),
             $version,
             true
         );
         wp_register_script(
             'wclf-stock-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-stock-filter.js',
-            array('wclf-ajax-core'),
+            array('wclf-ajax-core', 'wclf-mobile-sheets'),
             $version,
             true
         );
         wp_register_script(
             'wclf-attribute-filter',
             WCLF_PLUGIN_URL . 'assets/js/wclf-attribute-filter.js',
-            array('wclf-ajax-core'),
+            array('wclf-ajax-core', 'wclf-mobile-sheets'),
             $version,
             true
         );
+    }
+
+    /**
+     * Ensure AJAX core + mobile sheets assets are on the page.
+     */
+    private function enqueue_ajax_runtime() {
+        wp_enqueue_style('wclf-filters');
+        wp_enqueue_script('wclf-ajax-core');
+        wp_enqueue_style('wclf-mobile-sheets');
+        wp_enqueue_script('wclf-mobile-sheets');
+    }
+
+    /**
+     * Enqueue a filter script plus shared mobile-sheet assets.
+     *
+     * @param string $handle Script handle.
+     */
+    private function enqueue_filter_script($handle) {
+        wp_enqueue_style('wclf-filters');
+        wp_enqueue_script($handle);
+        wp_enqueue_style('wclf-mobile-sheets');
+        wp_enqueue_script('wclf-mobile-sheets');
+    }
+
+    /**
+     * Plus/minus accordion icon markup for filter dropdown toggles.
+     *
+     * @return string
+     */
+    private function render_accordion_icon() {
+        $plus  = esc_url(WCLF_PLUGIN_URL . 'assets/plus.svg');
+        $minus = esc_url(WCLF_PLUGIN_URL . 'assets/minus.svg');
+
+        return '<span class="wclf-acc-icon" aria-hidden="true">'
+            . '<img class="wclf-acc-icon__plus" src="' . $plus . '" width="20" height="20" alt="">'
+            . '<img class="wclf-acc-icon__minus" src="' . $minus . '" width="20" height="20" alt="">'
+            . '</span>';
     }
 
     /**
@@ -169,17 +236,15 @@ class WCLF_Shortcodes {
         $current_max = (int) (ceil($current_max / 1000) * 1000);
 
         // Enqueue registered script
-        wp_enqueue_script('wclf-price-filter');
+        $this->enqueue_filter_script('wclf-price-filter');
 
         ob_start();
         ?>
         <div class="custom-price-filter-wrapper" id="priceFilterWrapper">
             <div class="price-filter-dropdown">
-                <button class="dropdown-toggle" type="button" id="priceToggle">
+                <button class="dropdown-toggle active" type="button" id="priceToggle">
                     <span>فیلتر بر اساس قیمت</span>
-                    <svg class="arrow-icon" width="16" height="8" viewBox="0 0 16 8" fill="none">
-                        <path d="M2 2L8 6L14 2" stroke="#e7a439" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <?php echo $this->render_accordion_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </button>
                 <div class="dropdown-content open" id="priceFilterContent">
                     <div class="range-slider-container">
@@ -364,17 +429,15 @@ class WCLF_Shortcodes {
             ? __('همه در این دسته', 'woo-custom-loop-filters')
             : __('همه محصولات', 'woo-custom-loop-filters');
 
-        wp_enqueue_script('wclf-category-filter');
+        $this->enqueue_filter_script('wclf-category-filter');
 
         ob_start();
         ?>
         <div class="custom-category-filter-wrapper" id="categoryFilterWrapper">
             <div class="cat-filter-dropdown">
-                <button class="dropdown-toggle" type="button" id="catToggle">
+                <button class="dropdown-toggle active" type="button" id="catToggle">
                     <span><?php esc_html_e('فیلتر بر اساس دسته‌بندی', 'woo-custom-loop-filters'); ?></span>
-                    <svg class="arrow-icon" width="16" height="8" viewBox="0 0 16 8" fill="none">
-                        <path d="M2 2L8 6L14 2" stroke="#e7a439" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <?php echo $this->render_accordion_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </button>
                 <div class="dropdown-content open" id="catFilterContent">
                     <div class="category-list">
@@ -435,17 +498,15 @@ class WCLF_Shortcodes {
         $tax_obj = get_taxonomy($taxonomy);
         $tax_label = $tax_obj && isset($tax_obj->labels->singular_name) ? $tax_obj->labels->singular_name : __('برند', 'woo-custom-loop-filters');
 
-        wp_enqueue_script('wclf-brand-filter');
+        $this->enqueue_filter_script('wclf-brand-filter');
 
         ob_start();
         ?>
         <div class="custom-brand-filter-wrapper" id="brandFilterWrapper">
             <div class="cat-filter-dropdown">
-                <button class="dropdown-toggle" type="button" id="brandToggle">
+                <button class="dropdown-toggle active" type="button" id="brandToggle">
                     <span><?php echo esc_html(sprintf(__('فیلتر بر اساس %s', 'woo-custom-loop-filters'), $tax_label)); ?></span>
-                    <svg class="arrow-icon" width="16" height="8" viewBox="0 0 16 8" fill="none">
-                        <path d="M2 2L8 6L14 2" stroke="#e7a439" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <?php echo $this->render_accordion_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </button>
                 <div class="dropdown-content open" id="brandFilterContent">
                     <div class="category-list">
@@ -484,7 +545,7 @@ class WCLF_Shortcodes {
         $is_checked = isset($_GET['stock_filter']) && $_GET['stock_filter'] === 'instock';
 
         // Enqueue registered script
-        wp_enqueue_script('wclf-stock-filter');
+        $this->enqueue_filter_script('wclf-stock-filter');
 
         ob_start();
         ?>
@@ -517,10 +578,13 @@ class WCLF_Shortcodes {
 
         // Keep orderby clean and empty if not set in GET params
         $current_orderby = isset($_GET['orderby']) ? wc_clean(wp_unslash($_GET['orderby'])) : '';
+        // Legacy discount sort URLs map to the single "تخفیف‌دارها" option.
+        if (in_array($current_orderby, array('discount', 'discount-asc'), true)) {
+            $current_orderby = 'discounted';
+        }
 
         $sorting_options = array(
-            'discount'     => 'بیشترین تخفیف',
-            'discount-asc' => 'کمترین تخفیف',
+            'discounted'   => 'تخفیف‌دارها',
             'popularity'   => 'پربازدیدترین',
             'date'       => 'جدیدترین',
             'sales'      => 'پرفروش‌ترین',
@@ -532,7 +596,7 @@ class WCLF_Shortcodes {
         $reset_sort_url = remove_query_arg('orderby');
 
         // Enqueue AJAX core scripts since sorting links use it
-        wp_enqueue_script('wclf-ajax-core');
+        $this->enqueue_ajax_runtime();
 
         ob_start();
         ?>
@@ -595,7 +659,7 @@ class WCLF_Shortcodes {
         $current_value = isset($_GET[$param_key]) ? sanitize_text_field($_GET[$param_key]) : '';
 
         // Enqueue JS
-        wp_enqueue_script('wclf-attribute-filter');
+        $this->enqueue_filter_script('wclf-attribute-filter');
 
         $tax_obj = get_taxonomy($taxonomy);
         $tax_label = $tax_obj ? $tax_obj->labels->singular_name : $attribute_slug;
@@ -604,11 +668,9 @@ class WCLF_Shortcodes {
         ?>
         <div class="custom-attribute-filter-wrapper" id="attributeFilterWrapper" data-attribute="<?php echo esc_attr($attribute_slug); ?>">
             <div class="attr-filter-dropdown">
-                <button class="dropdown-toggle" type="button" id="attrToggle-<?php echo esc_attr($attribute_slug); ?>">
+                <button class="dropdown-toggle active" type="button" id="attrToggle-<?php echo esc_attr($attribute_slug); ?>">
                     <span>فیلتر بر اساس <?php echo esc_html($tax_label); ?></span>
-                    <svg class="arrow-icon" width="16" height="8" viewBox="0 0 16 8" fill="none">
-                        <path d="M2 2L8 6L14 2" stroke="#e7a439" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <?php echo $this->render_accordion_icon(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                 </button>
                 <div class="dropdown-content open" id="attrFilterContent-<?php echo esc_attr($attribute_slug); ?>">
                     <div class="attribute-list">
@@ -846,7 +908,7 @@ class WCLF_Shortcodes {
         }
 
         // Enqueue AJAX core scripts since we need it for updates
-        wp_enqueue_script('wclf-ajax-core');
+        $this->enqueue_ajax_runtime();
 
         ob_start();
         ?>

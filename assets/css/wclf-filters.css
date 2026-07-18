@@ -1,0 +1,47 @@
+/* Accordion +/- icons for filter dropdowns */
+.dropdown-toggle .wclf-acc-icon {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  flex-shrink: 0 !important;
+  margin-inline-start: auto !important;
+  line-height: 0 !important;
+}
+
+.dropdown-toggle .wclf-acc-icon img,
+.dropdown-toggle .wclf-acc-icon .wclf-acc-icon__plus,
+.dropdown-toggle .wclf-acc-icon .wclf-acc-icon__minus {
+  width: 20px !important;
+  height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  vertical-align: middle !important;
+}
+
+/* Closed (default): only + */
+.dropdown-toggle .wclf-acc-icon__plus {
+  display: block !important;
+}
+
+.dropdown-toggle .wclf-acc-icon__minus {
+  display: none !important;
+}
+
+/* Open (.active): only - */
+.dropdown-toggle.active .wclf-acc-icon__plus {
+  display: none !important;
+}
+
+.dropdown-toggle.active .wclf-acc-icon__minus {
+  display: block !important;
+}
+
+.dropdown-toggle .arrow-icon {
+  display: none !important;
+}

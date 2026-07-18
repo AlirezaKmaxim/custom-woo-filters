@@ -101,8 +101,7 @@ class WCLF_Query_Handler {
      */
     public function add_custom_sorting_options($options) {
         $custom_options = array(
-            'discount'      => 'بیشترین تخفیف',
-            'discount-asc'  => 'کمترین تخفیف',
+            'discounted'    => 'تخفیف‌دارها',
             'popularity'    => 'پربازدیدترین',
             'date'          => 'جدیدترین',
             'sales'         => 'پرفروش‌ترین',
@@ -510,27 +509,21 @@ class WCLF_Query_Handler {
         }
 
         switch ($orderby) {
-            case 'discount':
-            case 'discount-asc':
-                // Sort by discount only — do not hide products without a discount.
+            case 'discounted':
+            case 'discount': // legacy URL
+            case 'discount-asc': // legacy URL
+                // Show only products that have a discount (filter, not pure sort).
                 $meta_query = $query->get('meta_query') ?: array();
                 $meta_query[] = array(
-                    'relation' => 'OR',
-                    'wclf_discount' => array(
-                        'key'     => 'discount_percentage',
-                        'compare' => 'EXISTS',
-                        'type'    => 'NUMERIC',
-                    ),
-                    array(
-                        'key'     => 'discount_percentage',
-                        'compare' => 'NOT EXISTS',
-                    ),
+                    'key'     => 'discount_percentage',
+                    'value'   => 0,
+                    'compare' => '>',
+                    'type'    => 'NUMERIC',
                 );
                 $query->set('meta_query', $meta_query);
-                $query->set('orderby', array(
-                    'wclf_discount' => ('discount-asc' === $orderby) ? 'ASC' : 'DESC',
-                    'date'          => 'DESC',
-                ));
+                $query->set('meta_key', 'discount_percentage');
+                $query->set('orderby', 'meta_value_num');
+                $query->set('order', 'DESC');
                 break;
 
             case 'popularity':

@@ -1,0 +1,182 @@
+/* WCLF mobile bottom-sheets — active only below 768px */
+
+#wclf-mobile-sheets-root {
+  direction: rtl;
+}
+
+.wclf-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+}
+
+.wclf-sheet-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wclf-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100001;
+  max-height: min(88vh, 720px);
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
+  transform: translateY(110%);
+  transition: transform 0.28s ease;
+  overflow: hidden;
+}
+
+.wclf-sheet.is-open {
+  transform: translateY(0);
+}
+
+.wclf-sheet.is-dragging {
+  transition: none !important;
+}
+
+.wclf-sheet__grab {
+  flex: 0 0 auto;
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.wclf-sheet__handle {
+  width: 40px;
+  height: 4px;
+  margin: 10px auto 0;
+  border-radius: 999px;
+  background: #d1d5db;
+  flex: 0 0 auto;
+}
+
+.wclf-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px 8px;
+  border-bottom: 1px solid #eee;
+  flex: 0 0 auto;
+}
+
+.wclf-sheet__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.wclf-sheet__close {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #111827;
+  font-size: 0;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.wclf-sheet__close svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.wclf-sheet__close:hover,
+.wclf-sheet__close:focus {
+  background: #e5e7eb;
+  outline: none;
+}
+
+.wclf-sheet__body {
+  padding: 12px 16px 24px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+}
+
+/* Hide source containers in page flow on mobile until mounted into a sheet */
+@media (max-width: 767px) {
+  .wclf-mobile-filters-source:not(.wclf-sheet-mounted),
+  .wclf-mobile-sorting-source:not(.wclf-sheet-mounted) {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  .wclf-mobile-filters-source.wclf-sheet-mounted,
+  .wclf-mobile-sorting-source.wclf-sheet-mounted {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    clip: auto !important;
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+
+  /* 8px spacing between filters inside the mobile filters sheet */
+  .wclf-mobile-filters-source.wclf-sheet-mounted {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .wclf-mobile-filters-source.wclf-sheet-mounted > * {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Accordion: closed panels stay collapsed on mobile (price kept open via JS) */
+  .wclf-mobile-filters-source .dropdown-content:not(.open) {
+    display: none !important;
+  }
+}
+
+/* Desktop: sheets never used; sources stay in normal layout */
+@media (min-width: 768px) {
+  #wclf-mobile-sheets-root {
+    display: none !important;
+  }
+
+  .wclf-mobile-filters-source,
+  .wclf-mobile-sorting-source {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    clip: auto !important;
+    overflow: visible !important;
+  }
+}
+
+/* Soft lock without removing scrollbar (match AJAX preloader approach) */
+html.wclf-sheet-open,
+body.wclf-sheet-open {
+  overscroll-behavior: none;
+}
