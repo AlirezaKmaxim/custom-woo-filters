@@ -441,17 +441,25 @@ class WCLF_Query_Handler {
         switch ($orderby) {
             case 'discount':
             case 'discount-asc':
+                // Sort by discount only — do not hide products without a discount.
                 $meta_query = $query->get('meta_query') ?: array();
                 $meta_query[] = array(
-                    'key'     => 'discount_percentage',
-                    'value'   => 0,
-                    'compare' => '>',
-                    'type'    => 'NUMERIC',
+                    'relation' => 'OR',
+                    'wclf_discount' => array(
+                        'key'     => 'discount_percentage',
+                        'compare' => 'EXISTS',
+                        'type'    => 'NUMERIC',
+                    ),
+                    array(
+                        'key'     => 'discount_percentage',
+                        'compare' => 'NOT EXISTS',
+                    ),
                 );
                 $query->set('meta_query', $meta_query);
-                $query->set('meta_key', 'discount_percentage');
-                $query->set('orderby', 'meta_value_num');
-                $query->set('order', ('discount-asc' === $orderby) ? 'ASC' : 'DESC');
+                $query->set('orderby', array(
+                    'wclf_discount' => ('discount-asc' === $orderby) ? 'ASC' : 'DESC',
+                    'date'          => 'DESC',
+                ));
                 break;
 
             case 'popularity':

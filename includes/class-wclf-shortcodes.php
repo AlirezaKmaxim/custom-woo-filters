@@ -829,18 +829,6 @@ class WCLF_Shortcodes {
             );
         }
 
-        // 4. Discount sorting filter (only products with discount)
-        $orderby = isset($_GET['orderby']) ? wc_clean(wp_unslash($_GET['orderby'])) : '';
-        if (in_array($orderby, array('discount', 'discount-asc'), true)) {
-            $args['meta_query'] = isset($args['meta_query']) ? $args['meta_query'] : array();
-            $args['meta_query'][] = array(
-                'key'     => 'discount_percentage',
-                'value'   => 0,
-                'compare' => '>',
-                'type'    => 'NUMERIC',
-            );
-        }
-
         $filtered_query = new WP_Query($args);
         $filtered_count = $filtered_query->found_posts;
 
