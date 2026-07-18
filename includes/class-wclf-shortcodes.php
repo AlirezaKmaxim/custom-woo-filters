@@ -77,7 +77,7 @@ class WCLF_Shortcodes {
      * Register scripts.
      */
     public function register_filter_scripts() {
-        $version = '2.9.10';
+        $version = defined('WCLF_VERSION') ? WCLF_VERSION : '2.9.11';
 
         wp_register_script(
             'wclf-ajax-core',
@@ -553,7 +553,7 @@ class WCLF_Shortcodes {
         ?>
         <div class="beban-product-filters">
             <div class="beban-filters-header">
-                <img src="https://salamatfarivar3.faramoujdev.ir/wp-content/uploads/2026/06/Sort-From-Top-To-Bottom.svg" alt="مرتب سازی" class="beban-sort-icon">
+                <img src="<?php echo esc_url(WCLF_PLUGIN_URL . 'assets/sort-from-top-to-bottom.svg'); ?>" alt="مرتب سازی" class="beban-sort-icon">
                 <span class="beban-sort-title">مرتب سازی :</span>
             </div>
             <div class="beban-filters-list">
@@ -1228,7 +1228,7 @@ class WCLF_Shortcodes {
             return;
         }
 
-        wp_register_style('wclf-hidden-filters', false, array(), '2.9.10');
+        wp_register_style('wclf-hidden-filters', false, array(), defined('WCLF_VERSION') ? WCLF_VERSION : '2.9.11');
         wp_enqueue_style('wclf-hidden-filters');
         // Only hide the shortcode widget itself — never broad Elementor containers,
         // because parent sections/columns would hide the Loop Grid too.

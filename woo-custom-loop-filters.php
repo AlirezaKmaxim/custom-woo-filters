@@ -3,13 +3,14 @@
  * Plugin Name: WooCommerce Custom Loop Filters
  * Plugin URI: https://example.com/
  * Description: A comprehensive OOP plugin to filter and sort products in Elementor Loop Grid and WooCommerce default shop archives using a single Query ID.
- * Version: 2.9.10
+ * Version: 2.9.11
  * Author: AlirezaKMaxim
  * Author URL:https://github.com/AlirezaKmaxim/
  * License: GPL2
  * Text Domain: woo-custom-loop-filters
  * Domain Path: /languages
  *
+ * Changelog (2.9.11): Serve sort icon from local plugin assets (no hardcoded remote URL).
  * Changelog (2.9.10): Do not rewrite Elementor library queries to product (fixes blank shop).
  * Changelog (2.9.9): Prevent AJAX swap from wiping filters/template; safer overlay clip.
  * Changelog (2.9.8): Center spinner in viewport; clip blur overlay to products area only.
@@ -56,6 +57,7 @@ class WCLF_Bootstrap {
     private function define_constants() {
         define('WCLF_PLUGIN_DIR', plugin_dir_path(__FILE__));
         define('WCLF_PLUGIN_URL', plugin_dir_url(__FILE__));
+        define('WCLF_VERSION', '2.9.11');
     }
 
     /**
