@@ -528,23 +528,8 @@ class WCLF_Shortcodes {
             'price-desc' => 'گران‌ترین',
         );
 
-        // Check if any filters or sorting parameters are active
-        $has_active_filters = false;
-        foreach ($_GET as $key => $val) {
-            if (in_array($key, array('min_price', 'max_price', 'product_cat_filter', 'product_brand_filter', 'stock_filter', 'orderby'), true) || strpos($key, 'filter_') === 0) {
-                if (!empty($val)) {
-                    $has_active_filters = true;
-                    break;
-                }
-            }
-        }
-
-        $reset_url = remove_query_arg(array('min_price', 'max_price', 'product_cat_filter', 'product_brand_filter', 'stock_filter', 'orderby'));
-        foreach ($_GET as $key => $val) {
-            if (strpos($key, 'filter_') === 0) {
-                $reset_url = remove_query_arg($key, $reset_url);
-            }
-        }
+        // "همه" only clears sorting (orderby), not other active filters.
+        $reset_sort_url = remove_query_arg('orderby');
 
         // Enqueue AJAX core scripts since sorting links use it
         wp_enqueue_script('wclf-ajax-core');
@@ -557,7 +542,7 @@ class WCLF_Shortcodes {
                 <span class="beban-sort-title">مرتب سازی :</span>
             </div>
             <div class="beban-filters-list">
-                <a href="<?php echo esc_url($reset_url); ?>" class="beban-filter-item <?php echo !$has_active_filters ? 'active' : ''; ?>">
+                <a href="<?php echo esc_url($reset_sort_url); ?>" class="beban-filter-item <?php echo ('' === $current_orderby) ? 'active' : ''; ?>">
                     همه
                 </a>
 
