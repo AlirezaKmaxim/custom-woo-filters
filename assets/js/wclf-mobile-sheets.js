@@ -168,6 +168,7 @@
             backdrop.setAttribute('hidden', 'hidden');
         }
 
+        root.classList.remove('wclf-sheets-active');
         document.documentElement.classList.remove('wclf-sheet-open');
         document.body.classList.remove('wclf-sheet-open');
         dragState = null;
@@ -320,6 +321,7 @@
         var backdrop = root.querySelector('.wclf-sheet-backdrop');
         var sheet = document.getElementById(kind === 'filters' ? 'wclf-sheet-filters' : 'wclf-sheet-sorting');
 
+        root.classList.add('wclf-sheets-active');
         backdrop.removeAttribute('hidden');
         sheet.removeAttribute('hidden');
 
@@ -388,7 +390,7 @@
     window.wclf_close_mobile_sheets = closeAllSheets;
 
     window.wclf_init_mobile_sheets = function() {
-        ensureDom();
+        // Do not inject sheet DOM until first open — avoids bottom shadow over site mobile nav.
         bindUi();
         hookApplyFilters();
 

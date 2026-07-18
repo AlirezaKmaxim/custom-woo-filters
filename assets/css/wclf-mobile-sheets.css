@@ -4,18 +4,45 @@
   direction: rtl;
 }
 
+/* When no sheet is open, nothing may paint over the site mobile nav (bottom:0) */
+#wclf-mobile-sheets-root:not(.wclf-sheets-active) {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+#wclf-mobile-sheets-root:not(.wclf-sheets-active) .wclf-sheet,
+#wclf-mobile-sheets-root:not(.wclf-sheets-active) .wclf-sheet-backdrop {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+}
+
+/* Keep closed sheets fully out of paint — [hidden] alone can lose to display:flex */
+.wclf-sheet[hidden],
+.wclf-sheet-backdrop[hidden] {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+}
+
 .wclf-sheet-backdrop {
   position: fixed;
   inset: 0;
   z-index: 100000;
   background: rgba(15, 23, 42, 0.45);
   opacity: 0;
-  transition: opacity 0.25s ease;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
   pointer-events: none;
 }
 
 .wclf-sheet-backdrop.is-open {
   opacity: 1;
+  visibility: visible;
   pointer-events: auto;
 }
 
@@ -30,14 +57,20 @@
   flex-direction: column;
   background: #fff;
   border-radius: 16px 16px 0 0;
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
-  transform: translateY(110%);
-  transition: transform 0.28s ease;
+  /* Shadow only when open — closed + translateY leaked a dark band over mobile nav */
+  box-shadow: none;
+  transform: translateY(calc(100% + 48px));
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
   overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .wclf-sheet.is-open {
   transform: translateY(0);
+  visibility: visible;
+  pointer-events: auto;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.18);
 }
 
 .wclf-sheet.is-dragging {

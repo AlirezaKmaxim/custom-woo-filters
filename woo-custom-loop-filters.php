@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Custom Loop Filters
  * Plugin URI: https://example.com/
  * Description: A comprehensive OOP plugin to filter and sort products in Elementor Loop Grid and WooCommerce default shop archives using a single Query ID.
- * Version: 2.9.30
+ * Version: 2.9.32
  * Author: AlirezaKMaxim
  * Author URL:https://github.com/AlirezaKmaxim/
  * License: GPL2
@@ -13,6 +13,8 @@
  * Requires PHP: 7.4
  * Requires Plugins: woocommerce
  *
+ * Changelog (2.9.32): Keep WCLF filters with Elementor AJAX pagination (e-page-*).
+ * Changelog (2.9.31): Hide closed mobile sheets so box-shadow no longer covers site bottom nav.
  * Changelog (2.9.30): Match plus/minus accordion icon visual size.
  * Changelog (2.9.29): Swipe-down to close mobile bottom-sheets.
  * Changelog (2.9.28): Fix accordion +/- visibility; enlarge icons.
@@ -110,7 +112,7 @@ class WCLF_Bootstrap {
     private function define_constants() {
         define('WCLF_PLUGIN_DIR', plugin_dir_path(__FILE__));
         define('WCLF_PLUGIN_URL', plugin_dir_url(__FILE__));
-        define('WCLF_VERSION', '2.9.30');
+        define('WCLF_VERSION', '2.9.32');
     }
 
     /**

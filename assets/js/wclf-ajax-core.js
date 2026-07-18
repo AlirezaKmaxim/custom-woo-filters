@@ -51,6 +51,66 @@
         return maxCount;
     };
 
+    window.wclf_last_filter_params = {};
+    window.wclf_pagination_handling = false;
+
+    window.wclf_remember_filters_from_url = function(urlString) {
+        window.wclf_last_filter_params = window.wclf_collect_filter_params(urlString || window.location.href);
+    };
+
+    window.wclf_url_has_elementor_page = function(urlString) {
+        try {
+            const url = new URL(urlString || window.location.href, window.location.origin);
+            let found = false;
+            url.searchParams.forEach(function(_value, key) {
+                if (window.wclf_is_elementor_page_param(key)) {
+                    found = true;
+                }
+            });
+            return found;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    /**
+     * Elementor AJAX pagination often pushState()'s only e-page-* and drops filters.
+     * Re-merge remembered filters and load via WCLF AJAX instead.
+     */
+    window.wclf_repair_elementor_ajax_url = function(rawUrl) {
+        if (window.wclf_pagination_handling) {
+            return null;
+        }
+
+        let nextUrl;
+        try {
+            nextUrl = new URL(String(rawUrl || ''), window.location.origin);
+        } catch (e) {
+            return null;
+        }
+
+        if (!window.wclf_url_has_elementor_page(nextUrl.toString())) {
+            return null;
+        }
+
+        if (window.wclf_has_active_filters(nextUrl.toString())) {
+            window.wclf_remember_filters_from_url(nextUrl.toString());
+            return null;
+        }
+
+        const remembered = window.wclf_last_filter_params || {};
+        const keys = Object.keys(remembered);
+        if (!keys.length) {
+            return null;
+        }
+
+        keys.forEach(function(key) {
+            nextUrl.searchParams.set(key, remembered[key]);
+        });
+
+        return nextUrl.toString();
+    };
+
     window.wclf_filter_param_keys = [
         'min_price',
         'max_price',
@@ -59,6 +119,109 @@
         'stock_filter',
         'orderby'
     ];
+
+    window.wclf_is_elementor_page_param = function(key) {
+        return /^e-page-/i.test(String(key || ''));
+    };
+
+    window.wclf_strip_pagination_params = function(urlObj) {
+        if (!urlObj || !urlObj.searchParams) {
+            return urlObj;
+        }
+        const toDelete = [];
+        urlObj.searchParams.forEach(function(_value, key) {
+            if (window.wclf_is_elementor_page_param(key) || key === 'paged' || key === 'product-page') {
+                toDelete.push(key);
+            }
+        });
+        toDelete.forEach(function(key) {
+            urlObj.searchParams.delete(key);
+        });
+        return urlObj;
+    };
+
+    window.wclf_collect_filter_params = function(urlString) {
+        const collected = {};
+        try {
+            const url = new URL(urlString || window.location.href, window.location.origin);
+            window.wclf_filter_param_keys.forEach(function(key) {
+                if (url.searchParams.has(key) && url.searchParams.get(key) !== '') {
+                    collected[key] = url.searchParams.get(key);
+                }
+            });
+            url.searchParams.forEach(function(value, key) {
+                if (String(key).indexOf('filter_') === 0 && value !== '') {
+                    collected[key] = value;
+                }
+            });
+        } catch (e) {
+            return collected;
+        }
+        return collected;
+    };
+
+    window.wclf_merge_filters_into_url = function(targetHref, filterSourceHref) {
+        const target = new URL(targetHref, window.location.origin);
+        const filters = window.wclf_collect_filter_params(filterSourceHref || window.location.href);
+        Object.keys(filters).forEach(function(key) {
+            target.searchParams.set(key, filters[key]);
+        });
+        return target.toString();
+    };
+
+    window.wclf_is_pagination_link = function(anchor) {
+        if (!anchor || anchor.tagName !== 'A') {
+            return false;
+        }
+        const href = anchor.getAttribute('href');
+        if (!href || href === '#' || href.indexOf('javascript:') === 0) {
+            return false;
+        }
+
+        if (anchor.closest('.elementor-pagination, .woocommerce-pagination, nav.navigation.pagination')) {
+            return true;
+        }
+
+        if (anchor.classList.contains('page-numbers') || anchor.classList.contains('page-number')) {
+            return true;
+        }
+
+        try {
+            const url = new URL(href, window.location.origin);
+            let found = false;
+            url.searchParams.forEach(function(_value, key) {
+                if (window.wclf_is_elementor_page_param(key)) {
+                    found = true;
+                }
+            });
+            return found;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    window.wclf_sync_pagination_links = function(root) {
+        const scope = root || document;
+        const links = scope.querySelectorAll(
+            '.elementor-pagination a[href], .woocommerce-pagination a[href], nav.navigation.pagination a[href], a.page-numbers[href]'
+        );
+        if (!links.length || !window.wclf_has_active_filters(window.location.href)) {
+            return;
+        }
+
+        links.forEach(function(link) {
+            try {
+                const merged = window.wclf_merge_filters_into_url(link.getAttribute('href'), window.location.href);
+                link.setAttribute('href', merged);
+            } catch (e) {
+                // ignore invalid hrefs
+            }
+        });
+
+        window.wclf_log('debug', 'Pagination links synced with active filters', {
+            linkCount: links.length
+        });
+    };
 
     window.wclf_has_active_filters = function(urlString) {
         try {
@@ -274,21 +437,46 @@
         };
     };
 
-    window.wclf_apply_filters = function(url) {
+    window.wclf_apply_filters = function(url, options) {
+        options = options || {};
+        const keepPagination = !!options.keepPagination;
+
+        let normalizedUrl = url;
+        try {
+            const urlObj = new URL(url, window.location.origin);
+            if (!keepPagination) {
+                window.wclf_strip_pagination_params(urlObj);
+            }
+            // Always re-apply current filters onto pagination targets that lost them
+            // (Elementor AJAX "next" links often drop query filters).
+            if (keepPagination) {
+                normalizedUrl = window.wclf_merge_filters_into_url(urlObj.toString(), window.location.href);
+            } else {
+                normalizedUrl = urlObj.toString();
+            }
+        } catch (e) {
+            normalizedUrl = url;
+        }
+
+        window.wclf_remember_filters_from_url(normalizedUrl);
+        window.wclf_pagination_handling = true;
+
         const found = window.wclf_find_product_container(document);
         const container = found.container;
         const selectorUsed = found.selector;
 
         window.wclf_log('info', 'apply_filters called', {
-            url: url,
+            url: normalizedUrl,
+            keepPagination: keepPagination,
             selectorUsed: selectorUsed,
             hasContainer: !!container,
-            params: Object.fromEntries(new URL(url, window.location.origin).searchParams.entries())
+            params: Object.fromEntries(new URL(normalizedUrl, window.location.origin).searchParams.entries())
         });
 
         if (!container) {
             window.wclf_log('warn', 'No product container found, falling back to full page reload');
-            window.location.href = url;
+            window.wclf_pagination_handling = false;
+            window.location.href = normalizedUrl;
             return;
         }
 
@@ -339,6 +527,7 @@
                 activeOverlay.remove();
             }
             unlockScroll();
+            window.wclf_pagination_handling = false;
         };
 
         const oldOverlay = document.querySelector('.wclf-ajax-overlay');
@@ -420,14 +609,15 @@
         document.body.appendChild(overlay);
         document.body.appendChild(spinner);
 
-        history.pushState(null, '', url);
+        history.pushState(null, '', normalizedUrl);
 
         const beforeCount = window.wclf_count_products_in_container(container);
         window.wclf_log('info', 'Fetching filtered page', {
-            beforeProductCount: beforeCount
+            beforeProductCount: beforeCount,
+            url: normalizedUrl
         });
 
-        fetch(url, {
+        fetch(normalizedUrl, {
             cache: 'no-store',
             headers: {
                 'Cache-Control': 'no-cache',
@@ -471,9 +661,9 @@
 
                         if (afterCount === 0) {
                             window.wclf_log('warn', 'No products found after filter. Check PHP query / taxonomies / URL params.', {
-                                url: url
+                                url: normalizedUrl
                             });
-                            window.wclf_maybe_show_empty_results(container, url);
+                            window.wclf_maybe_show_empty_results(container, normalizedUrl);
                         } else {
                             window.wclf_remove_empty_results(container);
                         }
@@ -482,6 +672,15 @@
                             selectorUsed: selectorUsed
                         });
                     }
+
+                    // Pagination may sit outside the products list — keep it in sync.
+                    ['.elementor-pagination', '.woocommerce-pagination', 'nav.navigation.pagination'].forEach(function(pagSelector) {
+                        const currentPag = document.querySelector(pagSelector);
+                        const newPag = doc.querySelector(pagSelector);
+                        if (currentPag && newPag && !container.contains(currentPag)) {
+                            currentPag.innerHTML = newPag.innerHTML;
+                        }
+                    });
 
                     const filterWrappers = [
                         '#priceFilterWrapper',
@@ -532,6 +731,8 @@
                         window.wclf_init_mobile_sheets();
                     }
 
+                    window.wclf_sync_pagination_links(document);
+
                     window.wclf_log('info', 'Filter re-initialization complete');
                 } finally {
                     cleanupLoadingUi();
@@ -541,10 +742,10 @@
                 cleanupLoadingUi();
                 window.wclf_log('error', 'AJAX Filter failed', {
                     message: error && error.message ? error.message : error,
-                    url: url
+                    url: normalizedUrl
                 });
                 console.error('AJAX Filter error:', error);
-                window.location.href = url;
+                window.location.href = normalizedUrl;
             });
     };
 
@@ -576,10 +777,13 @@
             debugEnabled: window.wclf_is_debug_enabled(),
             pageUrl: window.location.href
         });
+        window.wclf_remember_filters_from_url(window.location.href);
         window.wclf_init_sorting_filter();
         if (typeof window.wclf_init_mobile_sheets === 'function') {
             window.wclf_init_mobile_sheets();
         }
+
+        window.wclf_sync_pagination_links(document);
 
         const found = window.wclf_find_product_container(document);
         if (found.container) {
@@ -592,6 +796,71 @@
     } else {
         window.wclf_boot();
     }
+
+    // Take over Elementor AJAX pagination clicks when filters are active.
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest && e.target.closest('a');
+        if (!link || !window.wclf_is_pagination_link(link)) {
+            return;
+        }
+
+        const remembered = window.wclf_last_filter_params || {};
+        const hasFilters = window.wclf_has_active_filters(window.location.href)
+            || Object.keys(remembered).length > 0;
+        if (!hasFilters) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof e.stopImmediatePropagation === 'function') {
+            e.stopImmediatePropagation();
+        }
+
+        const href = link.getAttribute('href');
+        const source = window.wclf_has_active_filters(window.location.href)
+            ? window.location.href
+            : (function() {
+                const u = new URL(window.location.href);
+                Object.keys(remembered).forEach(function(key) {
+                    u.searchParams.set(key, remembered[key]);
+                });
+                return u.toString();
+            }());
+        const merged = window.wclf_merge_filters_into_url(href, source);
+        window.wclf_log('info', 'Elementor AJAX pagination intercepted — preserving filters', {
+            original: href,
+            merged: merged
+        });
+        window.wclf_apply_filters(merged, { keepPagination: true });
+    }, true);
+
+    // Safety net: if Elementor AJAX still pushState's a bare e-page-* URL, repair it.
+    (function() {
+        const wrapHistory = function(methodName) {
+            const original = history[methodName];
+            if (typeof original !== 'function') {
+                return;
+            }
+            history[methodName] = function(state, title, url) {
+                if (typeof url === 'string' && url !== '') {
+                    const repaired = window.wclf_repair_elementor_ajax_url(url);
+                    if (repaired) {
+                        window.wclf_log('warn', 'Elementor AJAX URL dropped filters — repairing', {
+                            original: url,
+                            repaired: repaired
+                        });
+                        // Do not commit Elementor's bare URL; WCLF AJAX owns history.
+                        window.wclf_apply_filters(repaired, { keepPagination: true });
+                        return;
+                    }
+                }
+                return original.apply(history, arguments);
+            };
+        };
+        wrapHistory('pushState');
+        wrapHistory('replaceState');
+    }());
 
     window.addEventListener('popstate', function() {
         window.wclf_log('info', 'popstate detected, reloading page');
