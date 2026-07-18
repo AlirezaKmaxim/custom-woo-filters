@@ -40,6 +40,7 @@ class WCLF_Query_Helper {
      *     @type bool $exclude_price   Ignore min_price/max_price GET params.
      *     @type bool $exclude_brand   Ignore product_brand_filter GET param.
      *     @type bool $exclude_category_filter Prefer archive category over product_cat_filter.
+     *     @type string|string[] $exclude_attribute Attribute slug(s) whose filter_* GET param to ignore.
      *     @type bool $allow_unscoped_shop Return true instead of loading all shop IDs.
      * }
      * @return int[]|true Empty array = no products; true = unscoped full shop.
@@ -299,15 +300,28 @@ class WCLF_Query_Helper {
      * @return array
      */
     private static function normalize_options($options) {
-        return wp_parse_args(
+        $normalized = wp_parse_args(
             $options,
             array(
                 'exclude_price'            => false,
                 'exclude_brand'            => false,
                 'exclude_category_filter'  => false,
+                'exclude_attribute'        => array(),
                 'allow_unscoped_shop'      => true,
             )
         );
+
+        if (is_string($normalized['exclude_attribute']) && '' !== $normalized['exclude_attribute']) {
+            $normalized['exclude_attribute'] = array(sanitize_key($normalized['exclude_attribute']));
+        } elseif (!is_array($normalized['exclude_attribute'])) {
+            $normalized['exclude_attribute'] = array();
+        } else {
+            $normalized['exclude_attribute'] = array_values(
+                array_filter(array_map('sanitize_key', $normalized['exclude_attribute']))
+            );
+        }
+
+        return $normalized;
     }
 
     /**
@@ -354,6 +368,10 @@ class WCLF_Query_Helper {
         $attrs = array();
         foreach ($_GET as $key => $value) {
             if (0 === strpos($key, 'filter_') && '' !== $value) {
+                $attribute_name = sanitize_key(substr($key, 7));
+                if (in_array($attribute_name, $options['exclude_attribute'], true)) {
+                    continue;
+                }
                 $attrs[$key] = sanitize_text_field(wp_unslash($value));
             }
         }
@@ -474,7 +492,10 @@ class WCLF_Query_Helper {
 
         foreach ($_GET as $key => $value) {
             if (0 === strpos($key, 'filter_') && '' !== $value) {
-                $attribute_name = substr($key, 7);
+                $attribute_name = sanitize_key(substr($key, 7));
+                if (in_array($attribute_name, $options['exclude_attribute'], true)) {
+                    continue;
+                }
                 $attr_taxonomy = 'pa_' . $attribute_name;
                 if (taxonomy_exists($attr_taxonomy)) {
                     $tax_query[] = array(

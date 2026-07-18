@@ -600,10 +600,7 @@ class WCLF_Shortcodes {
             return '<p>' . sprintf(esc_html__('ویژگی "%s" یافت نشد!', 'woo-custom-loop-filters'), esc_html($attribute_slug)) . '</p>';
         }
 
-        $terms = get_terms(array(
-            'taxonomy'   => $taxonomy,
-            'hide_empty' => true,
-        ));
+        $terms = $this->get_contextual_attribute_terms($taxonomy, $attribute_slug);
 
         if (empty($terms) || is_wp_error($terms)) {
             return '';
@@ -650,6 +647,77 @@ class WCLF_Shortcodes {
         </div>
         <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Attribute terms present on products in the current catalog scope.
+     * Excludes the current attribute's own filter so selected options stay visible.
+     *
+     * @param string $taxonomy       Attribute taxonomy (pa_*).
+     * @param string $attribute_slug Attribute slug without pa_ prefix.
+     * @return array
+     */
+    private function get_contextual_attribute_terms($taxonomy, $attribute_slug) {
+        if (empty($taxonomy) || !taxonomy_exists($taxonomy)) {
+            return array();
+        }
+
+        $product_ids = WCLF_Query_Helper::get_page_product_ids(array(
+            'exclude_price'       => false,
+            'exclude_brand'       => false,
+            'exclude_attribute'   => $attribute_slug,
+            'allow_unscoped_shop' => true,
+        ));
+
+        if (empty($product_ids)) {
+            return array();
+        }
+
+        $counts = WCLF_Query_Helper::get_term_counts_for_products($taxonomy, $product_ids);
+
+        if (empty($counts)) {
+            return array();
+        }
+
+        $ordered_ids = array_map('intval', array_keys($counts));
+        $terms = get_terms(array(
+            'taxonomy'   => $taxonomy,
+            'include'    => $ordered_ids,
+            'orderby'    => 'include',
+            'hide_empty' => false,
+        ));
+
+        if (empty($terms) || is_wp_error($terms)) {
+            return array();
+        }
+
+        foreach ($terms as $term) {
+            if (isset($counts[(int) $term->term_id])) {
+                $term->count = (int) $counts[(int) $term->term_id];
+            }
+        }
+
+        $param_key = 'filter_' . $attribute_slug;
+        $current_value = isset($_GET[$param_key]) ? sanitize_text_field(wp_unslash($_GET[$param_key])) : '';
+        if ('' !== $current_value) {
+            $current_slugs = array_filter(array_map('sanitize_title', explode(',', $current_value)));
+            $present_slugs = wp_list_pluck($terms, 'slug');
+            foreach ($current_slugs as $slug) {
+                if (in_array($slug, $present_slugs, true)) {
+                    continue;
+                }
+                $selected = get_term_by('slug', $slug, $taxonomy);
+                if ($selected && !is_wp_error($selected)) {
+                    $selected->count = isset($counts[(int) $selected->term_id])
+                        ? (int) $counts[(int) $selected->term_id]
+                        : 0;
+                    $terms[] = $selected;
+                }
+            }
+            $terms = $this->sort_terms_by_contextual_count($terms);
+        }
+
+        return $terms;
     }
 
     /**
