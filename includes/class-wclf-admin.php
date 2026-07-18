@@ -378,7 +378,7 @@ class WCLF_Admin {
         <div class="wrap wclf-admin-wrap">
             <h1>
                 <?php esc_html_e('تنظیمات فیلترهای سفارشی المنتور و ووکامرس', 'woo-custom-loop-filters'); ?>
-                <span class="wclf-version-badge">v<?php echo esc_html(defined('WCLF_VERSION') ? WCLF_VERSION : '2.9.11'); ?></span>
+                <span class="wclf-version-badge">v<?php echo esc_html(defined('WCLF_VERSION') ? WCLF_VERSION : '2.9.12'); ?></span>
             </h1>
             <hr class="wp-header-end">
 

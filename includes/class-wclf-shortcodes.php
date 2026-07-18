@@ -77,7 +77,7 @@ class WCLF_Shortcodes {
      * Register scripts.
      */
     public function register_filter_scripts() {
-        $version = defined('WCLF_VERSION') ? WCLF_VERSION : '2.9.11';
+        $version = defined('WCLF_VERSION') ? WCLF_VERSION : '2.9.12';
 
         wp_register_script(
             'wclf-ajax-core',
@@ -971,6 +971,7 @@ class WCLF_Shortcodes {
      *
      * Shop: top-level categories (parent=0), non-empty, ordered by total product count DESC.
      * Category archive: direct children of the current archive category only.
+     * Brand / tag / search / other product tax: categories assigned to products in that scope.
      * If the archive category has no children, returns empty (filter is fully hidden).
      *
      * @return array
@@ -986,7 +987,59 @@ class WCLF_Shortcodes {
             return $this->get_shop_top_level_product_cat_terms();
         }
 
+        // Brand, tag, search, and other product taxonomy archives.
+        if (WCLF_Query_Helper::is_catalog_context()) {
+            return $this->get_scoped_product_cat_terms_for_page();
+        }
+
         return array();
+    }
+
+    /**
+     * Categories present on products in the current non-shop / non-category catalog page
+     * (brand archive, product tag, product search, custom product taxonomies).
+     *
+     * @return array
+     */
+    private function get_scoped_product_cat_terms_for_page() {
+        $product_ids = WCLF_Query_Helper::get_page_product_ids(array(
+            'exclude_price'           => true,
+            'exclude_brand'           => false,
+            'exclude_category_filter' => true,
+            'allow_unscoped_shop'     => false,
+        ));
+
+        if (empty($product_ids) || true === $product_ids) {
+            return array();
+        }
+
+        $counts = WCLF_Query_Helper::get_term_counts_for_products('product_cat', $product_ids);
+
+        if (empty($counts)) {
+            return array();
+        }
+
+        $ordered_ids = array_map('intval', array_keys($counts));
+        $terms = get_terms(
+            array(
+                'taxonomy'   => 'product_cat',
+                'include'    => $ordered_ids,
+                'orderby'    => 'include',
+                'hide_empty' => false,
+            )
+        );
+
+        if (empty($terms) || is_wp_error($terms)) {
+            return array();
+        }
+
+        foreach ($terms as $term) {
+            if (isset($counts[(int) $term->term_id])) {
+                $term->count = (int) $counts[(int) $term->term_id];
+            }
+        }
+
+        return $this->sort_and_filter_product_cat_terms_by_count($terms);
     }
 
     /**
@@ -1228,7 +1281,7 @@ class WCLF_Shortcodes {
             return;
         }
 
-        wp_register_style('wclf-hidden-filters', false, array(), defined('WCLF_VERSION') ? WCLF_VERSION : '2.9.11');
+        wp_register_style('wclf-hidden-filters', false, array(), defined('WCLF_VERSION') ? WCLF_VERSION : '2.9.12');
         wp_enqueue_style('wclf-hidden-filters');
         // Only hide the shortcode widget itself — never broad Elementor containers,
         // because parent sections/columns would hide the Loop Grid too.
