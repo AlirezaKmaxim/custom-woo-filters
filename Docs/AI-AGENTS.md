@@ -8,7 +8,7 @@ This file is a complete reference for AI agents working on this codebase. It cov
 
 ## 1. What This Project Is
 
-A **WordPress/WooCommerce plugin** (version 2.9.17) that adds AJAX-powered product filters to WooCommerce product listings. It works with both **Elementor Loop Grid** widgets and **native WooCommerce shop/category archives**. All filtering happens without page reloads. The plugin is built entirely in vanilla PHP and JavaScript with zero external dependencies.
+A **WordPress/WooCommerce plugin** (version 2.9.18) that adds AJAX-powered product filters to WooCommerce product listings. It works with both **Elementor Loop Grid** widgets and **native WooCommerce shop/category archives**. All filtering happens without page reloads. The plugin is built entirely in vanilla PHP and JavaScript with zero external dependencies.
 
 **Core idea:** The plugin hooks into WordPress query pipelines to modify product queries based on URL parameters, and provides 7 shortcodes that render filter UI widgets (price slider, category radio, brand radio, stock toggle, attribute radio, sorting dropdown, product count). A JavaScript AJAX engine fetches the full HTML page and swaps DOM containers to update both products and filters simultaneously.
 

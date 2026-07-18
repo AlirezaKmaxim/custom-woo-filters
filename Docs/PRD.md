@@ -2,7 +2,7 @@
 
 ## WooCommerce Custom Loop Filters (WCLF)
 
-**Version:** 2.9.17
+**Version:** 2.9.18
 **Author:** AlirezaKMaxim
 **License:** GPL2
 
@@ -97,9 +97,10 @@ WooCommerce's default product listing page offers no built-in AJAX filtering. Me
 ### 5.8 AJAX Engine
 - **FR-23:** Full-page fetch + DOM swap (not JSON endpoint)
 - **FR-24:** Replaces product container and all 7 filter wrapper innerHTMLs
-- **FR-25:** Loading overlay with spinner during fetch
+- **FR-25:** Full-page loading overlay with blur + centered spinner during fetch
 - **FR-26:** Browser history push/popstate support
 - **FR-27:** Graceful fallback to full page reload if no product container found
+- **FR-27d:** Filtered URL responses send no-cache / no-store headers and set `DONOTCACHEPAGE` for page-cache plugins
 
 ### 5.8b Dependencies
 - **FR-27b:** Plugin header declares `Requires Plugins: woocommerce`

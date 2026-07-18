@@ -20,6 +20,77 @@ class WCLF_Query_Handler {
 
         // Fallback for Elementor Loop Grid with Source = Products (no Query ID field).
         add_action('pre_get_posts', array($this, 'apply_elementor_product_loop_filters'), 99999);
+
+        // Avoid serving stale filtered HTML from page cache / CDN.
+        add_action('init', array($this, 'maybe_mark_request_uncacheable'), 1);
+        add_action('send_headers', array($this, 'maybe_send_no_cache_headers'));
+    }
+
+    /**
+     * Whether the current request carries WCLF filter / sort query args.
+     *
+     * @return bool
+     */
+    private function request_has_filter_params() {
+        $keys = array(
+            'min_price',
+            'max_price',
+            'product_cat_filter',
+            'product_brand_filter',
+            'stock_filter',
+            'orderby',
+        );
+
+        foreach ($keys as $key) {
+            if (isset($_GET[$key]) && '' !== (string) wp_unslash($_GET[$key])) {
+                return true;
+            }
+        }
+
+        foreach ($_GET as $key => $value) {
+            if (0 === strpos((string) $key, 'filter_') && '' !== (string) $value) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Tell popular page-cache plugins not to cache filtered catalog responses.
+     */
+    public function maybe_mark_request_uncacheable() {
+        if (is_admin() || !$this->request_has_filter_params()) {
+            return;
+        }
+
+        if (!defined('DONOTCACHEPAGE')) {
+            define('DONOTCACHEPAGE', true);
+        }
+        if (!defined('DONOTCACHEOBJECT')) {
+            define('DONOTCACHEOBJECT', true);
+        }
+        if (!defined('DONOTCACHEDB')) {
+            define('DONOTCACHEDB', true);
+        }
+    }
+
+    /**
+     * Emit no-store headers for filtered URLs (browsers, reverse proxies, CDNs).
+     */
+    public function maybe_send_no_cache_headers() {
+        if (is_admin() || !$this->request_has_filter_params()) {
+            return;
+        }
+
+        if (!headers_sent()) {
+            nocache_headers();
+            header('Cache-Control: private, no-store, no-cache, must-revalidate, max-age=0', true);
+            header('Pragma: no-cache', true);
+            header('Expires: 0', true);
+            header('CDN-Cache-Control: no-store', true);
+            header('Cloudflare-CDN-Cache-Control: no-store', true);
+        }
     }
 
     /**

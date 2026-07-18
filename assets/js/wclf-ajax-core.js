@@ -114,25 +114,16 @@
             return;
         }
 
-        const originalPosition = window.getComputedStyle(container).position;
-        if (originalPosition === 'static') {
-            container.style.position = 'relative';
-        }
-
-        const previousOverflow = container.style.overflow;
-        container.style.overflow = 'hidden';
-
         const htmlEl = document.documentElement;
         const bodyEl = document.body;
-        const previousHtmlOverflowX = htmlEl.style.overflowX;
-        const previousBodyOverflowX = bodyEl.style.overflowX;
-        htmlEl.style.overflowX = 'hidden';
-        bodyEl.style.overflowX = 'hidden';
+        const previousHtmlOverflow = htmlEl.style.overflow;
+        const previousBodyOverflow = bodyEl.style.overflow;
+        htmlEl.style.overflow = 'hidden';
+        bodyEl.style.overflow = 'hidden';
 
         const restoreOverflow = function() {
-            container.style.overflow = previousOverflow;
-            htmlEl.style.overflowX = previousHtmlOverflowX;
-            bodyEl.style.overflowX = previousBodyOverflowX;
+            htmlEl.style.overflow = previousHtmlOverflow;
+            bodyEl.style.overflow = previousBodyOverflow;
         };
 
         const removeSpinner = function() {
@@ -144,14 +135,14 @@
 
         const cleanupLoadingUi = function() {
             removeSpinner();
-            const activeOverlay = container.querySelector('.wclf-ajax-overlay');
+            const activeOverlay = document.querySelector('.wclf-ajax-overlay');
             if (activeOverlay) {
                 activeOverlay.remove();
             }
             restoreOverflow();
         };
 
-        const oldOverlay = container.querySelector('.wclf-ajax-overlay');
+        const oldOverlay = document.querySelector('.wclf-ajax-overlay');
         if (oldOverlay) {
             oldOverlay.remove();
         }
@@ -181,17 +172,19 @@
         }
         styleSheet.textContent = `
             .wclf-ajax-overlay {
-                position: absolute !important;
+                position: fixed !important;
                 inset: 0 !important;
-                width: 100% !important;
-                height: 100% !important;
-                max-width: 100% !important;
-                max-height: 100% !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 box-sizing: border-box !important;
-                background-color: rgba(255, 255, 255, 0.65) !important;
-                z-index: 5 !important;
+                background-color: rgba(255, 255, 255, 0.45) !important;
+                -webkit-backdrop-filter: blur(6px) !important;
+                backdrop-filter: blur(6px) !important;
+                z-index: 99998 !important;
                 display: block !important;
                 pointer-events: auto !important;
                 border-radius: 0 !important;
@@ -215,7 +208,7 @@
             }
         `;
 
-        container.appendChild(overlay);
+        document.body.appendChild(overlay);
         document.body.appendChild(spinner);
 
         history.pushState(null, '', url);
@@ -225,7 +218,13 @@
             beforeProductCount: beforeCount
         });
 
-        fetch(url)
+        fetch(url, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        })
             .then(function(response) {
                 window.wclf_log('info', 'Fetch response received', {
                     ok: response.ok,

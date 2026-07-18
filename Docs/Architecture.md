@@ -6,7 +6,7 @@
 
 ## 1. System Overview
 
-WCLF (version **2.9.17**) is a WordPress plugin that intercepts WooCommerce product queries, applies URL-based filters, and renders updated filter UI via shortcodes. The frontend uses AJAX to fetch full HTML pages and surgically swap DOM containers, ensuring all server-rendered content remains consistent. WooCommerce is a hard dependency (`Requires Plugins: woocommerce` + runtime admin notice).
+WCLF (version **2.9.18**) is a WordPress plugin that intercepts WooCommerce product queries, applies URL-based filters, and renders updated filter UI via shortcodes. The frontend uses AJAX to fetch full HTML pages and surgically swap DOM containers, ensuring all server-rendered content remains consistent. WooCommerce is a hard dependency (`Requires Plugins: woocommerce` + runtime admin notice). Filtered URLs send no-cache headers and set `DONOTCACHEPAGE` so page caches/CDNs do not serve stale filter HTML.
 
 ```
 ┌─────────────────────────────────────────────────────────┐
