@@ -186,7 +186,7 @@ window.wclf_apply_filters(url)
     │       tries: #cprf-products-area → .elementor-widget-loop-grid
     │       → .elementor-loop-container → .products
     │
-    ├── 2. Show loading overlay + spinner
+    ├── 2. Show full-page blur overlay + centered spinner (preloader on top)
     │
     ├── 3. history.pushState(state, '', url)
     │
